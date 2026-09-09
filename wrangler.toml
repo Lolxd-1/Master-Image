@@ -1,0 +1,27 @@
+name = "stock-picker"
+main = "worker/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The built SPA. One Worker serves both the app and the API, so there is a single
+# deploy and a single URL. Static assets are free and unmetered on the Workers free plan.
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# Decisions and catalog metadata. Strongly consistent, 100k row writes/day free.
+# (See SPEC.md §5.2 for why decisions live here and not in KV.)
+[[d1_databases]]
+binding = "DB"
+database_name = "stock-picker-db"
+database_id = "a6683e78-dc65-46f4-b566-2b5cab9c35b3"
+
+# Workbook skeleton, row XML and the products list. 25 MB value limit, which the
+# ~110 KB skeleton and ~3 MB row map sit comfortably inside.
+[[kv_namespaces]]
+binding = "KV"
+id = "02415294efb7445d87aba0df7a87250d"
+
+[observability]
+enabled = true

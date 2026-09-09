@@ -1,0 +1,33 @@
+{
+  "name": "stock-picker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mobile catalog picker: swipe products yes/no, export an Amazon SmartBiz bulk-upload sheet of the yes items.",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "wrangler dev --port 8787",
+    "build": "vite build",
+    "deploy": "vite build && wrangler deploy",
+    "setup": "node scripts/setup-cloudflare.mjs",
+    "db:local": "wrangler d1 execute stock-picker-db --local --file=./schema.sql",
+    "db:remote": "wrangler d1 execute stock-picker-db --remote --file=./schema.sql",
+    "user:add": "node scripts/user-add.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
+    "test": "node scripts/verify-xlsx.mjs && python scripts/verify_xlsx_independent.py && node scripts/verify-scale.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-excel.ps1",
+    "verify:excel": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-excel.ps1",
+    "verify:xlsx": "node scripts/verify-xlsx.mjs",
+    "verify:scale": "node scripts/verify-scale.mjs",
+    "verify:api": "node scripts/verify-api.mjs",
+    "verify:images": "node scripts/verify-images.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "wrangler": "^3.86.0"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  }
+}
