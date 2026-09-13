@@ -16,11 +16,12 @@ Last updated 2026-09-14. Every number below was measured or run, not estimated.
 ## Production status
 
 **The code is deployed** to the project's `workers.dev` URL
-(version `fe59b22e-3b93-47a2-9b7f-b0b41e7edf4d`, deployed 2026-09-14).
+(version `27acefcf-4ec0-4cf2-9056-2e892b1c3cd0`, deployed 2026-09-14).
 Run `npx wrangler deployments list` for the address — this repository is public, so the live
 URL is deliberately not written down here.
 
-Deliberately **not** deployed: the QuickVerse catalog. See below.
+The QuickVerse catalog is **now live too** — activated from the Admin screen by the account
+owner, not by this work. See "Catalog history" below.
 
 Verified after deploy — nothing was disturbed:
 
@@ -38,18 +39,22 @@ pass. The only assertions that failed were the harness's own hard-coded QuickVer
 
 ### Still outstanding
 
-**1. The QuickVerse catalog swap — held on purpose.**
-`store1` has **375 decisions (212 stocked)** on the live 650-product catalog. QuickVerse has no
-real SKUs (all synthetic `qv-…`), and the old catalog uses real column-A SKUs, so **the overlap
-is zero** — activating QuickVerse makes all 375 invisible and restarts store1 at 0 / 2,279.
-Nothing is deleted; re-activating catalog `id 1` brings it back. But tell store1 first.
+**1. store1's pre-swap work is stranded (decide what to do about it).**
+The catalog swap has happened. Because QuickVerse carries only synthetic `qv-…` SKUs and the
+old `Master excel.xlsx` carried real column-A ones, the overlap is zero, exactly as predicted.
+As of the last check, `store1` holds:
 
-When ready:
-```bash
-node scripts/seed-local.mjs <your-live-url> "QuickVerse_Master_Catalog.xlsx"
-```
-(or upload it from the Admin screen — same 5-step flow). No DB migration needed; the `override`
-table already exists live.
+| | decisions |
+|---|---|
+| against the live QuickVerse catalog | **123** |
+| against the retired 650-product catalog | **433** (inert — not shown, not exported) |
+
+Nothing was deleted. Those 433 rows are still in D1 and would reappear if catalog `id 1` were
+re-activated (`UPDATE catalog SET active = 1 WHERE id = 1`, and `0` for id 2). There is no
+automatic way to carry them across — the two catalogs share no product identifiers — so this
+is a judgement call: leave it, or re-activate the old list so that work is finished first.
+
+29 per-product price/size fixes are stored and are keyed the same way.
 
 **2. Rotate every account password — do this first.**
 `worker/users.ts` still carries the starter accounts shipped with the project, and this
