@@ -12,11 +12,14 @@
     "setup": "node scripts/setup-cloudflare.mjs",
     "db:local": "wrangler d1 execute stock-picker-db --local --file=./schema.sql",
     "db:remote": "wrangler d1 execute stock-picker-db --remote --file=./schema.sql",
+    "db:migrate": "wrangler d1 execute stock-picker-db --remote --file=./scripts/migrate-v2.sql",
     "user:add": "node scripts/user-add.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
-    "test": "node scripts/verify-xlsx.mjs && python scripts/verify_xlsx_independent.py && node scripts/verify-scale.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-excel.ps1",
+    "test": "node scripts/verify-xlsx.mjs && node scripts/verify-catalog.mjs && python scripts/verify_xlsx_independent.py && node scripts/verify-scale.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-excel.ps1",
     "verify:excel": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-excel.ps1",
     "verify:xlsx": "node scripts/verify-xlsx.mjs",
+    "verify:catalog": "node scripts/verify-catalog.mjs",
+    "seed:quickverse": "node scripts/seed-local.mjs http://127.0.0.1:8787 \"QuickVerse_Master_Catalog.xlsx\"",
     "verify:scale": "node scripts/verify-scale.mjs",
     "verify:api": "node scripts/verify-api.mjs",
     "verify:images": "node scripts/verify-images.mjs"
@@ -28,6 +31,7 @@
     "wrangler": "^3.86.0"
   },
   "dependencies": {
-    "fflate": "^0.8.2"
+    "fflate": "^0.8.2",
+    "playwright": "^1.63.0"
   }
 }

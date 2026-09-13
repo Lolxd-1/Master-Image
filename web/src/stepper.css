@@ -1,0 +1,145 @@
+/* Stepper — direct-manipulation replacement for the four-field edit modal (production v2).
+   Tokens only, from :root / the dark-mode block in styles.css — no literal colours here
+   except pure-alpha (black/white) overlays, so the existing dark-mode block re-themes this
+   for free. Every size/radius/spacing value below is chosen to match the app's own buttons
+   (--tap, --r) so a stepper sitting next to a .btn or a .card__edit looks native. */
+
+.stepper-wrap {
+  display: block;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.stepper__btn {
+  appearance: none;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.12s ease;
+}
+.stepper__btn:active {
+  transform: scale(0.94);
+}
+.stepper__btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.stepper-wrap[data-size="sm"] .stepper__btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.stepper__track {
+  position: relative;
+  min-height: 54px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  font-size: 22px;
+  color: var(--ink);
+  touch-action: pan-y;
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stepper-wrap[data-size="sm"] .stepper__track {
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 16px;
+  padding: 0 14px;
+}
+
+/* Quiet drag affordance — chevrons hinting the value can be scrubbed left/right. */
+.stepper__track::before,
+.stepper__track::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  font-weight: 700;
+  opacity: 0.3;
+  pointer-events: none;
+  color: var(--ink-3);
+}
+.stepper__track::before {
+  content: '\2039'; /* ‹ */
+  left: 8px;
+}
+.stepper__track::after {
+  content: '\203A'; /* › */
+  right: 8px;
+}
+.stepper-wrap[data-size="sm"] .stepper__track::before,
+.stepper-wrap[data-size="sm"] .stepper__track::after {
+  display: none;
+}
+
+.stepper__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --overlay already flips light/dark in styles.css, so one rule covers both themes. */
+.stepper--dragging .stepper__track {
+  touch-action: none;
+  border-color: var(--accent);
+  background: var(--overlay);
+}
+
+.stepper__input {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+  border: 0;
+  outline-offset: 2px;
+  width: 100%;
+  min-height: 54px;
+  text-align: center;
+  color: var(--ink);
+  padding: 0;
+}
+.stepper-wrap[data-size="sm"] .stepper__input {
+  min-height: 44px;
+}
+
+.stepper__hint {
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  margin: 6px 0 0;
+  min-height: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepper__btn {
+    transition: none;
+  }
+  .stepper__btn:active {
+    transform: none;
+  }
+}

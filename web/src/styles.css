@@ -1,23 +1,68 @@
-/* Stock Picker — phone-first styles.
-   Target: a low-end Android on a slow connection. System fonts only, no webfonts,
-   no gradients, no glass. The product image is the hero; everything else gets out of its way. */
+/* Stock Picker — phone-first styles (production v2).
+   Target: a low-end Android on a slow connection. System fonts only, no webfonts.
+   The product image is the hero; everything else gets out of its way.
+   Tokens + scale defined in DESIGN.md — no literal colours/sizes outside :root/dark block. */
 
 :root {
   --bg: #faf7f2;
   --surface: #ffffff;
   --line: #e8e2d8;
   --ink: #1c1a17;
-  --ink-2: #5f5850;
-  --ink-3: #8d857a;
-  --accent: #1f6feb;
-  --yes: #12855a;
-  --yes-soft: #e3f5ec;
-  --no: #c8362f;
-  --no-soft: #fdeae8;
+  --ink-2: #453f39;
+  --ink-3: #5b554e;
+  --accent: #0b5bd3;
+  --accent-ink: #ffffff;
+  --yes: #0e6b43;
+  --yes-soft: #dff2e6;
+  --yes-ink: #0b5a38;
+  --no: #b3261e;
+  --no-soft: #fbe4e1;
+  --no-ink: #8f1d17;
   --shadow: 0 1px 2px rgba(28, 26, 23, .06), 0 8px 24px rgba(28, 26, 23, .08);
+  --overlay: rgba(0, 0, 0, .05);
+  --overlay-strong: rgba(0, 0, 0, .45);
+  --r-sm: 10px;
   --r: 16px;
+  --r-lg: 20px;
+  --pill: 999px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 21px;
+  --fs-2xl: 30px;
   --tap: 48px;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ease-snap: cubic-bezier(.2, .9, .25, 1.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171410;
+    --surface: #221e19;
+    --line: #3a342c;
+    --ink: #f5efe6;
+    --ink-2: #d8cfc2;
+    --ink-3: #bfb5a6;
+    --accent: #7aa7ff;
+    --accent-ink: #0a1930;
+    --yes: #5fd39a;
+    --yes-soft: #123f2c;
+    --yes-ink: #d7f5e3;
+    --no: #ff9a92;
+    --no-soft: #4d211d;
+    --no-ink: #ffd9d5;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
+    --overlay: rgba(255, 255, 255, .08);
+    --overlay-strong: rgba(0, 0, 0, .6);
+  }
 }
 
 * { box-sizing: border-box; }
@@ -28,6 +73,7 @@ html, body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
+  font-size: var(--fs);
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
 }
@@ -44,7 +90,20 @@ body { overscroll-behavior-y: contain; }
   margin: 0 auto;
 }
 
+/* dvh is unsupported in a few low-end Android WebViews still in the wild — fall back to vh. */
+@supports not (height: 100dvh) {
+  #app { min-height: 100vh; }
+  .screen { min-height: 100vh; }
+}
+
 button { font: inherit; color: inherit; }
+
+/* Visible keyboard focus on everything focusable (D-13). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
 
 /* ------------------------------------------------------------------ buttons */
 
@@ -58,12 +117,13 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
   background: var(--surface);
   border-color: var(--line);
+  color: var(--ink);
   transition: transform .12s ease, opacity .12s ease;
 }
 .btn:active { transform: scale(.98); }
 .btn:disabled { opacity: .45; cursor: default; }
-.btn-primary { background: var(--ink); color: #fff; border-color: var(--ink); }
-.btn-lg { min-height: 54px; width: 100%; font-size: 17px; }
+.btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-lg { min-height: 54px; width: 100%; font-size: var(--fs-lg); }
 
 .icon-btn {
   appearance: none;
@@ -77,19 +137,24 @@ button { font: inherit; color: inherit; }
   border-radius: 12px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
 }
-.icon-btn:active { background: rgba(0, 0, 0, .05); }
+.icon-btn:active { background: var(--overlay); }
 
+/* 44px floor + separation (D-12). Colour meets 4.5:1 (D-15). */
 .link-btn {
   appearance: none;
   background: none;
   border: 0;
-  padding: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  min-width: 44px;
   color: var(--accent);
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 /* ------------------------------------------------------------------ boot / empty */
@@ -100,16 +165,22 @@ button { font: inherit; color: inherit; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 32px 24px;
+  gap: var(--sp-4);
+  padding: var(--sp-8) var(--sp-6);
   text-align: center;
   color: var(--ink-2);
 }
 .boot-state .btn { min-width: 160px; }
+.boot-skeleton { width: min(420px, 90%); display: flex; flex-direction: column; gap: var(--sp-3); }
+.boot-skeleton__line {
+  height: 14px; border-radius: 7px; background: var(--line);
+  animation: pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes pulse { from { opacity: .5; } to { opacity: 1; } }
 
 /* ------------------------------------------------------------------ login */
 
-.screen-login { justify-content: center; padding: 24px; }
+.screen-login { justify-content: center; padding: var(--sp-6); }
 .login-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -117,54 +188,76 @@ button { font: inherit; color: inherit; }
   box-shadow: var(--shadow);
   padding: 28px 22px;
 }
-.login-title { margin: 0 0 20px; font-size: 22px; letter-spacing: -.02em; }
+.login-title { margin: 0 0 var(--sp-1); font-size: 22px; letter-spacing: -.02em; }
+.login-sub { margin: 0 0 var(--sp-5); font-size: var(--fs-sm); color: var(--ink-2); line-height: 1.5; }
 .login-form { display: flex; flex-direction: column; gap: 14px; }
 .form-field { display: flex; flex-direction: column; gap: 6px; }
-.form-field label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.form-field label { font-size: var(--fs-sm); font-weight: 600; color: var(--ink-2); }
 .form-field input {
   font: inherit;
   min-height: var(--tap);
   padding: 0 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
 }
 .form-field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.password-wrap { display: flex; gap: var(--sp-2); align-items: stretch; }
+.password-wrap input { flex: 1; min-width: 0; }
 .login-error, .export-error, .admin-error {
   background: var(--no-soft);
-  color: var(--no);
-  border-radius: 10px;
+  color: var(--no-ink);
+  border-radius: var(--r-sm);
   padding: 10px 12px;
   font-size: 14px;
 }
-.login-submit { margin-top: 4px; }
+@media (prefers-color-scheme: dark) {
+  .login-error, .export-error, .admin-error { color: var(--no-ink); }
+}
+.login-submit { margin-top: var(--sp-1); }
+.login-support { font-size: var(--fs-sm); color: var(--ink-2); text-align: center; margin: var(--sp-4) 0 0; }
 
 /* ------------------------------------------------------------------ shared bits */
 
 .progress-bar {
-  height: 6px;
+  height: 8px;
   background: var(--line);
-  border-radius: 999px;
+  border-radius: var(--pill);
   overflow: hidden;
 }
 .progress-bar__fill {
   height: 100%;
   background: var(--yes);
-  border-radius: 999px;
+  border-radius: var(--pill);
   transition: width .25s ease;
 }
 
 .status-chip {
-  font-size: 12px;
-  color: var(--ink-3);
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, .04);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 6px 10px;
+  border-radius: var(--pill);
+  background: var(--overlay);
   white-space: nowrap;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
-.status-chip[data-status="offline"] { background: var(--no-soft); color: var(--no); }
+.status-chip[data-status="offline"] { background: var(--no-soft); color: var(--no-ink); }
 .status-chip[data-status="saving"] { color: var(--ink-2); }
+.status-chip__dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: var(--ink-3); }
+.status-chip[data-status="saved"] .status-chip__dot { background: var(--yes); }
+.status-chip[data-status="saving"] .status-chip__dot { background: var(--accent); }
+.status-chip[data-status="offline"] .status-chip__dot { background: var(--no); }
+
+/* Tabular numbers for every count the user checks. */
+.cat-header__summary, .deck-progress__label, .card__price-row, .export-total,
+.prow__price, .review-tab, .home-stock {
+  font-variant-numeric: tabular-nums;
+}
 
 /* ------------------------------------------------------------------ categories */
 
@@ -174,23 +267,56 @@ button { font: inherit; color: inherit; }
   z-index: 5;
   background: var(--bg);
   padding: 14px 16px 12px;
+  padding-top: calc(14px + env(safe-area-inset-top));
   border-bottom: 1px solid var(--line);
 }
 .cat-header__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .cat-header__user { font-weight: 700; font-size: 16px; }
-.cat-header__actions { display: flex; align-items: center; gap: 2px; }
-.cat-header__summary { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+.cat-header__actions { display: flex; align-items: center; gap: var(--sp-2); }
+.cat-header__summary { margin-top: var(--sp-2); font-size: var(--fs-sm); color: var(--ink-2); }
 .cat-header .progress-bar { margin-top: 10px; }
+.home-stock { margin: var(--sp-2) 0 0; font-size: var(--fs-2xl); font-weight: 750; letter-spacing: -.02em; }
+.home-stock__sub { margin: var(--sp-1) 0 0; font-size: var(--fs-sm); color: var(--ink-2); }
+.home-cta { margin-top: var(--sp-3); }
+.home-search { margin-top: var(--sp-3); }
+.search-input {
+  width: 100%;
+  font: inherit;
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.cat-main { flex: 1; padding: 14px 16px 120px; }
 
 .cat-grid {
-  flex: 1;
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
-  padding: 14px 16px 108px;
   margin: 0;
+  padding: 0;
   list-style: none;
 }
+
+/* 27 categories is a long single-column scroll on anything wider than a phone-in-portrait. */
+@media (min-width: 420px) {
+  .cat-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Search results replace the grid in place (D-06 follow-up) — they used to live inside the
+   sticky header, where a long result list grew taller than the screen and shoved the whole
+   category grid out of reach. */
+.search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.search-bar p { margin: 0; color: var(--ink-2); font-size: var(--fs-sm); }
+.search-results-list { display: flex; flex-direction: column; gap: var(--sp-2); }
 
 .cat-tile {
   display: flex;
@@ -207,67 +333,159 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .cat-tile:active { transform: scale(.995); }
+.cat-tile--done { opacity: .92; }
 .cat-tile__thumb {
   width: 60px;
   height: 60px;
   flex: 0 0 60px;
   object-fit: contain;
-  background: #fff;
+  background: var(--surface);
   border-radius: 10px;
 }
+.cat-tile__thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
 .cat-tile__info { flex: 1; min-width: 0; }
+/* D-04: name and count are block-level — never run together. */
 .cat-tile__name {
+  display: block;
   font-weight: 650;
-  font-size: 15px;
+  font-size: var(--fs);
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
-.cat-tile__count { margin-top: 4px; font-size: 13px; color: var(--ink-3); }
+.cat-tile__count { display: block; margin-top: var(--sp-1); font-size: var(--fs-sm); color: var(--ink-2); }
 .cat-tile__ring { flex: 0 0 auto; }
 
 .ring { display: block; transform: rotate(-90deg); }
 .ring__track { fill: none; stroke: var(--line); }
 .ring__fill { fill: none; stroke: var(--yes); stroke-linecap: round; transition: stroke-dashoffset .3s ease; }
 
+/* D-05: opaque bar + content padding — no transparent dead zone over tiles. */
 .footer-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--bg) 70%, rgba(250, 247, 242, 0));
+  background: var(--bg);
+  border-top: 1px solid var(--line);
   z-index: 10;
 }
 .footer-bar__btn { max-width: 528px; margin: 0 auto; display: block; }
 
+/* Overflow menu (⋯) holding Admin + Log out — kills the 1.9px adjacency (D-12). */
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  z-index: 20;
+}
+.menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
 /* ------------------------------------------------------------------ deck */
 
-.screen-deck { height: 100dvh; overflow: hidden; }
+/* `[hidden]`'s UA-stylesheet `display:none` loses to ANY author rule that sets
+   `display` on the same element — a real trap here since the swipe/list panels are
+   toggled via the `hidden` property. Pinning it `!important` at author level means
+   toggling `.hidden` always actually hides, regardless of what else touches display. */
+[hidden] { display: none !important; }
+
+.screen-deck {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+@supports not (height: 100dvh) {
+  .screen-deck { height: 100vh; }
+}
 
 .deck-topbar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: var(--sp-2);
+  padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
   border-bottom: 1px solid var(--line);
+  background: var(--bg);
 }
-.deck-progress { flex: 1; min-width: 0; }
+/* flex: 1 1 auto (not the shorthand `flex: 1`, which sets a 0% basis) so this block claims
+   the topbar's leftover space and then truncates internally — the status chip beside it
+   keeps its own natural width instead of the two visually colliding at 320-360px. */
+.deck-progress { flex: 1 1 auto; min-width: 0; }
 .deck-progress__label {
-  font-size: 13px;
+  /* This is a <span>: inline by default, so a width-constrained truncation (nowrap +
+     hidden + ellipsis) does nothing on it — the text just overflows its box straight
+     into the status chip next door, the exact collision this rule exists to prevent.
+     `block` gives it the width to truncate against. */
+  display: block;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--ink-2);
   margin-bottom: 5px;
+  padding-right: var(--sp-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Undo lives here now, icon-only, next to Back — it was stealing a third of the
+   footer row from the two decide buttons at 360px. */
+.btn-undo-icon:disabled { opacity: .35; cursor: default; }
 
-.card-stack {
+.deck-tabs { flex: 0 0 auto; display: flex; gap: var(--sp-1); padding: var(--sp-2) var(--sp-4) 0; }
+.deck-tabs button[role="tab"] {
   flex: 1;
+  min-height: 44px;
+  border-radius: var(--pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+.deck-tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* Strict flex column: topbar and tabs are fixed, exactly one of these two panels
+   flexes and owns its own scrolling. List mode used to be a bare div inside an
+   overflow:hidden screen — everything past the first screenful was unreachable. */
+.card-stack {
+  flex: 1 1 auto;
   position: relative;
   margin: 14px 16px;
   min-height: 0;
   touch-action: pan-y;
+}
+.deck-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0 16px calc(20px + env(safe-area-inset-bottom));
 }
 
 .card {
@@ -275,7 +493,7 @@ button { font: inherit; color: inherit; }
   inset: 0;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: var(--r-lg);
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
@@ -284,14 +502,22 @@ button { font: inherit; color: inherit; }
   user-select: none;
   -webkit-user-select: none;
 }
+.card--peek {
+  z-index: 1;
+  transform: scale(0.96) translateY(10px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.card--top { z-index: 2; }
+.card--dragging { cursor: grabbing; }
 
 .card__image-wrap {
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
+  background: var(--surface);
   padding: 14px;
 }
 .card__image {
@@ -305,40 +531,260 @@ button { font: inherit; color: inherit; }
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 24px;
-  font-size: 15px;
+  padding: var(--sp-6);
+  font-size: var(--fs);
   font-weight: 600;
-  color: var(--ink-3);
+  color: var(--ink-2);
   line-height: 1.4;
 }
 
-.card__body { padding: 14px 16px 18px; border-top: 1px solid var(--line); }
+/* Tightened padding: the product image is the thing a shopkeeper recognises a product by,
+   so the body gives it back every px it doesn't need (see the stepper-hint overrides below,
+   which claw back the rest of the height without touching the shared stepper.css). */
+/* The body must never be clipped by the card. Expanding the MRP row adds ~70px, and on a
+   640px screen that is more than the image can give back once it hits its floor — the pack
+   size row then disappeared under the card's `overflow:hidden`, unreachable. Let the body
+   take the space it needs and scroll if the screen is genuinely too short, rather than
+   silently swallowing a control. `pan-y` keeps this vertical scroll from competing with the
+   card's horizontal swipe-to-decide. */
+.card__body {
+  padding: 4px 14px 6px;
+  border-top: 1px solid var(--line);
+  position: relative;
+  flex: 0 0 auto;
+  max-height: calc(100% - 80px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
 .card__chip {
   display: inline-block;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
-  color: var(--ink-3);
-  margin-bottom: 6px;
+  color: var(--ink-2);
+  margin-bottom: 2px;
 }
-.card__name { font-size: 17px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
-.card__price { margin-top: 8px; display: flex; align-items: baseline; gap: 10px; }
-.card__price-sell { font-size: 21px; font-weight: 750; }
-.card__price-mrp { font-size: 15px; color: var(--ink-3); text-decoration: line-through; }
+/* Clamped to 2 lines: unclamped, a long name pushed the price stepper off the card. */
+.card__name {
+  font-size: var(--fs-lg);
+  font-weight: 650;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding-right: 40px; /* keep clear of the ⋯ More button */
+}
+/* Every stepper on the card used to carry its context (MRP, savings, "not set") in a
+   `.stepper__hint` line rendered BELOW it (shared stepper.css, min-height:16px + 6px
+   margin — the edit sheet uses the same component and must keep that). That's also
+   where the confusion came from ("is the top one MRP or the bottom one?") — nothing
+   above either stepper said what it was. The fix moves that information into a label
+   row ABOVE each stepper instead (see .card__price-label-row / .card__mrp-label-row /
+   .card__size-label-row below) and hides the now-empty hint line entirely, card-scoped
+   only, so the edit sheet's own hints (Original: ₹X) are untouched. Because the label
+   row replaces rather than adds to the hint line, the card's total height barely moves.
+   The old NBSP-once-set trick that used to protect the pack-size hint's height is gone
+   for the same reason — there is no hint left to protect. */
+.card__body .stepper__hint { display: none; }
 
+/* While the MRP row is open the body needs ~70px more than the image can spare at its normal
+   floor, so lend it some: the shopkeeper who opened MRP is reading numbers, not the picture.
+   Progressive enhancement — where `:has()` is unsupported the body simply scrolls instead
+   (see .card__body), so the pack size row stays reachable either way. */
+.card:has(.card__mrp-wrap:not([hidden])) .card__image-wrap { min-height: 64px; }
+.card:has(.card__mrp-wrap:not([hidden])) .card__body { max-height: calc(100% - 64px); }
+
+.card__price-row { margin-top: 1px; }
+.card__price-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: 0 0 3px;
+}
+.card__price-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-3);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Real button, not a decorative chip: this is the only way to raise an MRP that is
+   already equal to the selling price without leaving the card (the price stepper's
+   own "+" is capped at MRP). Sized to the same 44px tap target as every other control
+   on the card. */
+.card__mrp-chip {
+  flex: 0 0 auto;
+  appearance: none;
+  height: 44px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.card__mrp-chip[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.card__mrp-wrap { margin-top: 6px; }
+.card__mrp-label-row {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-3);
+  margin: 0 0 3px;
+}
+
+.card__size-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: 6px 0 3px;
+}
+.card__size-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-3);
+}
+/* Quiet marker standing in for the old "Not set — tap to set" hint line. */
+.card__size-unset {
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  font-style: italic;
+}
+.card__size-row {
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+/* No size known yet (no override, nothing parseable from the name) — muted until touched. */
+.card__size-row--unset { opacity: .6; }
+.card__size-stepper { flex: 1 1 auto; min-width: 0; }
+.card__units { position: relative; flex: 0 0 auto; }
+/* Flush with the sm stepper's − / + buttons beside it: with the hint line above now
+   hidden, `.card__size-stepper` is exactly the sm stepper's 44px row (no more hint
+   pushing its wrapper to ~60px, which used to centre this pill visibly low). Sized
+   and radiused to match `.stepper-wrap[data-size="sm"] .stepper__btn` in stepper.css
+   exactly (44px, 12px radius, 1.5px border) rather than the old pill/oval, so the three
+   controls read as one set instead of a big oval dropped in next to two squares. */
+.card__unit-pill {
+  height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.card__unit-options {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  padding: 4px;
+  box-shadow: var(--shadow);
+  z-index: 5;
+}
+.card__unit-chip {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 4px 10px;
+  border-radius: var(--pill);
+  border: 0;
+  background: none;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.card__unit-chip:active { background: var(--line); }
+/* ⋯ More: an icon, not a row — the rarer edits (name, MRP) live behind it now. */
+.card__more {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.edited-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--pill);
+  padding: 3px 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+@media (prefers-color-scheme: dark) {
+  .edited-badge { color: var(--accent-ink); }
+}
+
+/* CSS-driven tint (D-21 made live) + YES/NO stamp (D-22). */
 .swipe-tint {
   position: absolute;
   inset: 0;
-  border-radius: 20px;
+  border-radius: var(--r-lg);
   pointer-events: none;
   opacity: 0;
   z-index: 2;
 }
 .swipe-tint[data-dir="yes"] { background: var(--yes-soft); }
 .swipe-tint[data-dir="no"] { background: var(--no-soft); }
+.swipe-stamp {
+  position: absolute;
+  top: 14px;
+  z-index: 3;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: .08em;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 2.5px solid;
+  opacity: 0;
+  pointer-events: none;
+}
+.swipe-stamp--yes { right: 14px; color: var(--yes-ink); border-color: var(--yes); background: var(--yes-soft); }
+.swipe-stamp--no { left: 14px; color: var(--no-ink); border-color: var(--no); background: var(--no-soft); }
 
+/* Undo moved to the topbar (see .btn-undo-icon above) — Don't stock / Stock it now
+   get the full footer width instead of splitting it three ways at 360px. */
 .deck-controls {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -362,59 +808,179 @@ button { font: inherit; color: inherit; }
   transition: transform .12s ease;
 }
 .btn-decide:active { transform: scale(.97); }
-.btn-decide--no { background: var(--no-soft); border-color: rgba(200, 54, 47, .35); color: var(--no); }
-.btn-decide--yes { background: var(--yes-soft); border-color: rgba(18, 133, 90, .35); color: var(--yes); }
+.btn-decide--no { background: var(--no-soft); border-color: var(--no); color: var(--no-ink); }
+.btn-decide--yes { background: var(--yes-soft); border-color: var(--yes); color: var(--yes-ink); }
 
-.btn-undo {
-  appearance: none;
-  flex: 0 0 auto;
-  min-width: var(--tap);
-  min-height: 60px;
-  padding: 0 14px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink-2);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.btn-undo:disabled { opacity: .35; }
+.deck-hint { flex: 0 0 auto; text-align: center; font-size: var(--fs-xs); color: var(--ink-2); padding: 0 16px 8px; }
 
+/* Absolute + scrollable inside .card-stack: on a short screen the complete panel's
+   buttons could otherwise sit below the fold with nothing to scroll them into view. */
 .deck-complete {
-  flex: 1;
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  padding: 32px 24px;
+  padding: var(--sp-8) var(--sp-6);
   text-align: center;
   color: var(--ink-2);
 }
-.deck-complete__icon { font-size: 40px; line-height: 1; }
+.deck-complete__icon { font-size: 40px; line-height: 1; color: var(--yes); }
 .deck-complete .btn { max-width: 320px; }
+
+/* List mode's toolbar (Stock all / Clear all + filter chips) stays reachable while
+   rows scroll beneath it — opaque so scrolled content never shows through. */
+.list-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bg);
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+/* Four filter chips used to wrap onto two more rows below Stock all/Clear all — ~330px of
+   a 360x640 screen gone before a single product showed. One horizontally-scrollable row
+   instead: the row scrolls, the page must not (it doesn't — overflow-x:auto here is its own
+   scroll container and never grows the document). Scrollbar hidden on every engine since
+   this is a swipe affordance, not a scrollbar-driven list. */
+.list-toolbar .filter-chips {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+.list-toolbar .filter-chips::-webkit-scrollbar { display: none; }
+.list-toolbar .filter-chips .chip-btn { flex: 0 0 auto; }
+/* ------------------------------------------------------------------ product rows (list / review / search / export) */
+
+.prow-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.prow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: var(--sp-3);
+  min-height: 64px;
+}
+/* The whole row answers a tap to decide (not just the 44px toggle) — a small square is a
+   poor target on a phone. Buttons inside stop propagation to keep their own behaviour. */
+.prow--tappable { cursor: pointer; }
+.prow--tappable:active { transform: scale(.995); }
+.prow__thumb {
+  width: 48px; height: 48px; flex: 0 0 48px;
+  object-fit: contain; border-radius: 8px; background: var(--surface);
+}
+.prow__thumb--empty {
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: var(--ink-2); border: 1px solid var(--line);
+}
+.prow__info { flex: 1; min-width: 0; }
+.prow__name { font-weight: 600; font-size: var(--fs); line-height: 1.3; overflow-wrap: anywhere; }
+.prow__name-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Single line, ellipsised — never wraps, so a long category/size never pushes the row taller
+   or forces horizontal scroll at 320px. The Changed badge lives here, not in the clamped name. */
+.prow__meta {
+  margin-top: 2px;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prow__size { color: var(--ink-2); }
+.prow__size--muted { color: var(--ink-3); font-style: italic; }
+.prow__price { font-weight: 750; }
+.prow__price-orig { text-decoration: line-through; color: var(--ink-2); margin-left: 6px; font-weight: 400; }
+.prow__toggle {
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.prow__toggle[data-state="1"] { background: var(--yes-soft); border-color: var(--yes); color: var(--yes-ink); }
+.prow__toggle[data-state="0"] { background: var(--no-soft); border-color: var(--no); color: var(--no-ink); }
+.prow__toggle[data-state=""] { color: var(--ink-2); }
+/* Neutral and visually distinct from .prow__toggle — a pencil sitting beside a stock/
+   no-stock toggle must not look like a third state of the same control. */
+.prow__edit {
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.prow__edit:active { background: var(--overlay); }
+.prow__remove {
+  flex: 0 0 auto; min-height: 44px; min-width: 44px;
+  border: 1px solid var(--line); background: var(--surface);
+  border-radius: 10px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+/* Thumb 48 + gap + edit + toggle leaves little room for the name at 320px — shrink the two
+   buttons (info keeps min-width:0 and the name/meta rules above already contain overflow). */
+@media (max-width: 360px) {
+  .prow__edit, .prow__toggle {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 6px 8px;
+  }
+}
+.list-head { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; }
+.filter-chips { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.chip-btn {
+  min-height: 44px; padding: 8px 14px; border-radius: var(--pill);
+  border: 1px solid var(--line); background: var(--surface); font-weight: 700; cursor: pointer;
+}
+.chip-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.review-tabs { display: flex; gap: var(--sp-2); }
+.review-tabs .chip-btn { flex: 1; }
 
 /* ------------------------------------------------------------------ export + admin */
 
 .export-topbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 8px 10px;
   border-bottom: 1px solid var(--line);
   font-weight: 650;
+  background: var(--bg);
 }
+.export-topbar h1 { font-size: var(--fs-lg); margin: 0; }
 
 .export-body, .admin-body {
   flex: 1;
   padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
 }
 
-.export-total { font-size: 30px; font-weight: 750; letter-spacing: -.02em; }
+.export-total { font-size: var(--fs-2xl); font-weight: 750; letter-spacing: -.02em; margin: 0; }
+.export-sub { color: var(--ink-2); font-size: var(--fs-sm); margin: 0; }
 
 .export-breakdown, .admin-card {
   background: var(--surface);
@@ -429,31 +995,191 @@ button { font: inherit; color: inherit; }
   gap: 12px;
   padding: 11px 0;
   border-bottom: 1px solid var(--line);
-  font-size: 15px;
+  font-size: var(--fs);
 }
 .export-breakdown__row:last-child { border-bottom: 0; }
 
 .export-note, .admin-warning {
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--ink-2);
   line-height: 1.5;
-  background: rgba(0, 0, 0, .03);
-  border-radius: 10px;
+  background: var(--overlay);
+  border-radius: var(--r-sm);
   padding: 12px 14px;
 }
+.export-success {
+  background: var(--yes-soft); color: var(--yes-ink);
+  border-radius: var(--r); padding: var(--sp-4); line-height: 1.5;
+}
+.export-actions { display: flex; flex-direction: column; gap: var(--sp-2); }
 
-.admin-card { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.admin-card input[type="file"] { font: inherit; font-size: 14px; }
+.admin-card { padding: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-3); }
+.admin-card__header { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.admin-card h2 { font-size: var(--fs-lg); margin: 0; }
+.admin-drop {
+  border: 2px dashed var(--line);
+  border-radius: var(--r);
+  padding: var(--sp-6);
+  text-align: center;
+  cursor: pointer;
+  min-height: 44px;
+  transition: border-color .12s ease, background .12s ease;
+}
+.admin-drop--hover { border-color: var(--accent); background: var(--overlay); }
+.admin-drop input[type="file"] { font: inherit; font-size: 14px; min-height: 44px; }
+.admin-progress { height: 8px; background: var(--line); border-radius: var(--pill); overflow: hidden; }
+.admin-progress__fill { height: 100%; background: var(--accent); }
 .admin-step { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 
-.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+/* Six columns overflow a 360px phone with no way to reach the rest — make the overflow
+   reachable instead of clipped, while the page itself keeps scrolling vertically as normal. */
+.admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 calc(-1 * var(--sp-4));
+  padding: 0 var(--sp-4);
+}
+.admin-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; }
 .admin-table th, .admin-table td {
   text-align: left;
   padding: 10px 6px;
   border-bottom: 1px solid var(--line);
+  white-space: nowrap;
 }
-.admin-table th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.admin-table th { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); }
 .admin-table tr:last-child td { border-bottom: 0; }
+.admin-table__bar { width: 80px; height: 6px; }
+
+/* ------------------------------------------------------------------ toast + confirm */
+
+.toast-stack {
+  position: fixed;
+  left: 16px; right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  z-index: 200; max-width: 528px; margin: 0 auto;
+}
+.toast {
+  background: var(--ink); color: var(--bg);
+  border-radius: 12px; padding: 12px 14px;
+  display: flex; align-items: center; gap: var(--sp-3);
+  box-shadow: var(--shadow); font-size: var(--fs);
+}
+.toast button {
+  margin-left: auto; background: none; border: 1px solid currentColor;
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; font-weight: 700; cursor: pointer;
+}
+.confirm-scrim {
+  position: fixed; inset: 0; background: var(--overlay-strong);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 100;
+  padding: 16px;
+}
+.confirm {
+  background: var(--surface); color: var(--ink);
+  border-radius: var(--r-lg); padding: var(--sp-5);
+  max-width: 480px; width: 100%;
+  display: flex; flex-direction: column; gap: var(--sp-3);
+}
+.confirm__actions { display: flex; gap: var(--sp-2); }
+.confirm__actions .btn { flex: 1; }
+
+/* ------------------------------------------------------------------ edit sheet */
+/* Rebuilt as a compact stepper-driven sheet — design target is no scrolling at 360×640;
+   max-height/overflow below stays only as a safety net for very short screens. */
+
+.sheet-scrim {
+  position: fixed; inset: 0; background: var(--overlay-strong);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 100;
+}
+.sheet {
+  background: var(--bg); color: var(--ink);
+  border-radius: 20px 20px 0 0;
+  padding: var(--sp-3) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
+  max-width: 560px; width: 100%;
+  max-height: 90dvh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--sp-3);
+}
+.sheet:focus { outline: none; }
+
+.sheet__handle {
+  align-self: center;
+  width: 40px; height: 5px;
+  border-radius: var(--pill);
+  background: var(--line);
+  margin-bottom: 2px;
+  touch-action: none; /* the handle owns vertical drag-to-dismiss; the sheet body still scrolls normally */
+}
+
+.sheet__header { display: flex; align-items: center; gap: var(--sp-3); }
+.sheet__thumb {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  object-fit: contain; border-radius: 10px; background: var(--surface);
+  border: 1px solid var(--line);
+}
+.sheet__thumb--empty {
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: var(--ink-2);
+}
+.sheet__name-wrap { flex: 1; min-width: 0; }
+.sheet__name-view { display: flex; align-items: center; gap: 4px; }
+.sheet__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 650;
+  font-size: var(--fs-lg);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sheet__name--empty { color: var(--ink-3); font-style: italic; }
+.sheet__name-edit, .sheet__name-reset, .sheet__close {
+  flex: 0 0 auto;
+  min-width: 44px; min-height: 44px;
+  border: 0; background: none; color: var(--ink-2); cursor: pointer;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.sheet__name-edit:active, .sheet__name-reset:active, .sheet__close:active { background: var(--overlay); }
+.sheet__name-input {
+  width: 100%; font: inherit; font-weight: 650; font-size: var(--fs-lg);
+  min-height: 44px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); color: var(--ink);
+}
+.sheet__name-meta { margin: 0; font-size: var(--fs-sm); color: var(--ink-2); }
+.sheet__name-meta--err { color: var(--no-ink); }
+
+.sheet__field { display: flex; flex-direction: column; gap: 4px; }
+.sheet__field-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.sheet__field-label { font-size: var(--fs-sm); font-weight: 600; color: var(--ink-2); }
+.sheet__reset {
+  min-width: 44px; min-height: 44px; border: 0; background: none;
+  color: var(--accent); cursor: pointer; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.sheet__reset:active { background: var(--overlay); }
+.sheet__orig { margin: 0; font-size: var(--fs-sm); color: var(--ink-2); }
+
+.sheet__size-row { display: flex; align-items: stretch; gap: var(--sp-2); }
+.sheet__size-row > .stepper-wrap { flex: 1; min-width: 0; }
+/* Muted until the shopkeeper actually sets a size — no override and nothing parseable
+   from the name yet, so the number showing is a placeholder, not a real value. */
+.sheet__size-row--placeholder .stepper-wrap { opacity: .55; }
+.sheet__unit-btn {
+  flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 0 14px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--ink); font-weight: 700;
+  cursor: pointer;
+}
+.sheet__unit-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+.sheet__sku { font-size: var(--fs-xs); color: var(--ink-2); cursor: pointer; margin: 0; }
+
+.sheet__actions { display: flex; gap: var(--sp-2); }
+.sheet__actions .btn { flex: 1; width: auto; }
 
 /* ------------------------------------------------------------------ motion */
 
@@ -463,3 +1189,31 @@ button { font: inherit; color: inherit; }
     transition-duration: .001ms !important;
   }
 }
+
+/* ------------------------------------------------------------------ incremental list (shared) */
+
+/* Trailing slot for renderIncrementalList's IntersectionObserver sentinel / "Show more" fallback. */
+.list-tail { display: flex; justify-content: center; padding: var(--sp-4) 0; }
+.list-sentinel { height: 1px; width: 100%; }
+.list-show-more { max-width: 320px; }
+
+/* ------------------------------------------------------------------ review screen (own toolbar) */
+
+/* review.ts's tab bar + search live in the screen's own markup, not the shared product-rows
+   section, so they can be sticky without affecting list/search/export rows elsewhere. */
+.review-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--bg);
+  padding-top: var(--sp-1);
+  padding-bottom: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0 calc(-1 * var(--sp-4));
+  padding-left: var(--sp-4);
+  padding-right: var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+.review-search { margin: 0; }

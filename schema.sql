@@ -24,3 +24,16 @@ CREATE TABLE decision (
   PRIMARY KEY (username, sku)
 );
 CREATE INDEX idx_decision_user ON decision (username);
+
+-- Per-user, per-field corrections to the catalog. Absent = use the catalog value.
+-- Keyed by (username, sku) like `decision`: corrections survive a catalog re-upload.
+-- Apply with: npm run db:local (local) and npm run db:remote (live) — CREATE TABLE IF NOT EXISTS.
+CREATE TABLE IF NOT EXISTS override (
+  username   TEXT    NOT NULL,
+  sku        TEXT    NOT NULL,
+  field      TEXT    NOT NULL,   -- 'name' | 'size' | 'mrp' | 'price'
+  value      TEXT    NOT NULL,   -- always stored as text; numbers are parsed at use
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (username, sku, field)
+);
+CREATE INDEX IF NOT EXISTS idx_override_user ON override (username);

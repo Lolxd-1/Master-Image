@@ -251,6 +251,80 @@ await t('T-2.6', 'replaying an identical batch is idempotent', async () => {
   return 'posted 3x, no duplicates';
 });
 
+await t('T-2.5b', 'posting value:null deletes the decision (durable undecide)', async () => {
+  const j = jar(); await login(j, U1);
+  const sku = sampleSkus[5];
+  await j.fetch('/api/decisions', { method: 'POST', body: JSON.stringify({ items: [{ sku, value: 1 }] }) });
+  eq((await j.fetch('/api/decisions')).body[sku], 1, 'decision should be set');
+  const del = await j.fetch('/api/decisions', { method: 'POST', body: JSON.stringify({ items: [{ sku, value: null }] }) });
+  eq(del.status, 200, 'undecide status');
+  const d = (await j.fetch('/api/decisions')).body;
+  ok(!(sku in d), 'undecided SKU should be absent after reload');
+  // Replay the delete — safe.
+  const again = await j.fetch('/api/decisions', { method: 'POST', body: JSON.stringify({ items: [{ sku, value: null }] }) });
+  eq(again.status, 200, 'replay delete status');
+  // Bad value rejected, not crashed on.
+  const bad = await j.fetch('/api/decisions', { method: 'POST', body: JSON.stringify({ items: [{ sku, value: 2 }] }) });
+  eq(bad.status, 400, 'bad value status');
+  return 'set → null → absent, replay safe, bad value 400';
+});
+
+await t('T-2.5c', 'overrides set, read back, reset, and validate', async () => {
+  const j = jar(); await login(j, U1);
+  const sku = sampleSkus[4];
+  // set
+  const set = await j.fetch('/api/overrides', { method: 'POST', body: JSON.stringify({ items: [{ sku, field: 'price', value: '38' }] }) });
+  eq(set.status, 200, 'set status');
+  const got = (await j.fetch('/api/overrides')).body;
+  eq(got[sku]?.price, '38', 'override reads back');
+  // reset one field
+  await j.fetch('/api/overrides', { method: 'POST', body: JSON.stringify({ items: [{ sku, field: 'price', value: null }] }) });
+  const after = (await j.fetch('/api/overrides')).body;
+  ok(!(sku in after) || !('price' in (after[sku] || {})), 'reset field should be gone');
+  // bad field / bad value / oversized
+  const bf = await j.fetch('/api/overrides', { method: 'POST', body: JSON.stringify({ items: [{ sku, field: 'nope', value: 'x' }] }) });
+  eq(bf.status, 400, 'bad field status');
+  const bv = await j.fetch('/api/overrides', { method: 'POST', body: JSON.stringify({ items: [{ sku, field: 'price', value: 'abc' }] }) });
+  eq(bv.status, 400, 'bad value status');
+  const big = Array.from({ length: 501 }, (_, i) => ({ sku: `s-${i}`, field: 'price', value: '1' }));
+  eq((await j.fetch('/api/overrides', { method: 'POST', body: JSON.stringify({ items: big }) })).status, 400, 'oversized status');
+  return 'set → read → reset; 400s on bad field/value/size';
+});
+
+await t('T-2.4b', 'overrides are per-user; admin ?user= reads, picker ?user= cannot', async () => {
+  const a = jar(); await login(a, U1);
+  const b = jar(); await login(b, U2);
+  const sku = sampleSkus[3];
+  await a.fetch('/api/overrides', { method: 'POST', body: JSON.stringify({ items: [{ sku, field: 'name', value: 'STORE1 NAME' }] }) });
+  const da = (await a.fetch('/api/overrides')).body;
+  const db = (await b.fetch('/api/overrides')).body;
+  eq(da[sku]?.name, 'STORE1 NAME', 'owner sees own edit');
+  ok(!(sku in db) || db[sku]?.name !== 'STORE1 NAME', 'other user must not see it');
+  // picker asking for someone else → 403
+  eq((await a.fetch(`/api/overrides?user=${U2.username}`)).status, 403, 'picker ?user= overrides');
+  eq((await a.fetch(`/api/decisions?user=${U2.username}`)).status, 403, 'picker ?user= decisions');
+  // admin can read either
+  const adm = jar(); await login(adm, ADMIN);
+  eq((await adm.fetch(`/api/overrides?user=${U1.username}`)).body[sku]?.name, 'STORE1 NAME', 'admin reads user override');
+  eq((await adm.fetch(`/api/decisions?user=${U1.username}`)).status, 200, 'admin reads user decisions');
+  // cleanup
+  await a.fetch('/api/overrides', { method: 'POST', body: JSON.stringify({ items: [{ sku, field: 'name', value: null }] }) });
+  return 'isolation holds; admin cross-user reads work';
+});
+
+await t('T-2.3b', 'progress includes last-active per user', async () => {
+  const adm = jar(); await login(adm, ADMIN);
+  const prog = (await adm.fetch('/api/progress')).body;
+  ok(prog[U1.username], 'store1 missing from progress');
+  for (const u of [U1.username, U2.username]) {
+    const e = prog[u];
+    ok(e && typeof e.decided === 'number' && typeof e.yes === 'number' && typeof e.total === 'number', `${u} shape`);
+    ok('lastActive' in e, `${u} missing lastActive`);
+  }
+  ok(typeof prog[U1.username].lastActive === 'number', 'active user should have a lastActive timestamp');
+  return 'decided/yes/total/lastActive present';
+});
+
 await t('T-2.7', 'an oversized batch is rejected, not crashed on', async () => {
   const j = jar(); await login(j, U1);
   const items = Array.from({ length: 501 }, (_, i) => ({ sku: `fake-${i}`, value: 1 }));

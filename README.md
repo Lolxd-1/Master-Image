@@ -33,8 +33,9 @@ The last command prints a link like `https://stock-picker.<your-name>.workers.de
 
 | I want to… | Do this |
 |---|---|
-| Put a new/updated catalog online | Open the link, log in as `admin`, go to Admin, choose your Excel file |
-| See who has done how much | Log in as `admin` — the progress table is on the Admin screen |
+| Put a new/updated catalog online | Open the link, log in as `admin`, go to Admin, choose your Excel file. Shop owners' choices and price fixes are kept automatically; if the upload fails the previous list stays live |
+| See who has done how much | Log in as `admin` — the progress table on the Admin screen shows stocked / not stocked / left / last active per shop |
+| Download one shop's file yourself | Admin screen → that shop's row → File. It builds exactly the file that shop would get |
 | Change the code and re-publish | `npm run deploy` |
 | Add or change a user | `npm run user:add <username> <password>` then paste the printed line into `worker/users.ts` and run `npm run deploy` |
 
@@ -58,13 +59,20 @@ overwrite another's.
 ## For a store owner (what to tell them)
 
 1. Open the link. Log in with the username and password you were given.
-2. You'll see your product categories. Tap one.
-3. For each product: **✓ if you stock it, ✗ if you don't.** You can swipe the card instead.
-   Got one wrong? Tap **Undo**.
-4. Stop whenever you like. Close the browser, come back tomorrow — you carry on exactly where
+2. You'll see how many items you stock, and a button to start or continue where you stopped. Tap it.
+3. For each product: **✓ Stock it if you sell it, ✗ Don't stock if you don't.** You can swipe the card, or switch to List to tick many at once.
+4. To find a product fast, use the search box on the first screen.
+5. If our price or pack size is wrong for your shop, fix it right on the card: use the **− / +**
+   buttons under the price and under the pack size — tap to nudge by one, hold one down to move
+   faster, or drag the number left and right to slide it. Price can never go above MRP. For
+   anything else, like the product name, tap **⋯** on the card. A changed product shows a
+   "Changed" tag everywhere.
+6. Got one wrong? Open **Review my list** (menu ⋯, or after finishing a category) and flip anything — any decision can be changed at any time.
+7. Stop whenever you like. Close the browser, come back tomorrow — you carry on exactly where
    you stopped, even on a different phone.
-5. When you're done, tap **Download my list**. Upload that file to SmartBiz **without opening
-   it or changing anything.**
+8. When you're done, tap **Make my file**. When it is ready, **Share** it (for example to
+   WhatsApp) or save it to your phone. Send that file as it is — **do not open it or change
+   anything first.**
 
 ---
 
@@ -92,12 +100,21 @@ downloaded. If it still fails, SmartBiz will name the column it dislikes; send t
 
 **"I uploaded a sheet and it was rejected."**
 The app only accepts a real SmartBiz bulk-upload template: it must have the
-`bulk_upload_template` sheet, and every product needs a SKU ID in column A. The error message
-names the exact row.
+`bulk_upload_template` sheet. Column A (SKU ID) is allowed to be blank — SmartBiz normally fills
+that in itself once you upload to it, so the app quietly makes up its own internal ID for each
+product instead, and nothing is lost. What it won't accept is two rows already carrying the
+*same* SKU ID — the error message names the exact row.
 
 **"Someone lost their progress."**
 Unlikely — choices save to the server continuously, and the phone keeps its own copy too. Have
-them log in again on any device; their work follows the login, not the phone.
+them log in again on any device; their work follows the login, not the phone. Any wrong choice
+can be fixed from Review my list.
+
+**Applying the price-fix update to an existing database.**
+The per-shop price/name fixes need one new table. On an existing live database run once:
+`npm run db:migrate` (local equivalent:
+`npx wrangler d1 execute stock-picker-db --local --config wrangler.local.toml --file=./scripts/migrate-v2.sql`).
+Fresh setups (`npm run setup` / `npm run db:local`) already include it via `schema.sql`.
 
 **"Images aren't loading."**
 The pictures come straight from Amazon's servers. If Amazon is slow, cards may briefly show a
@@ -116,10 +133,14 @@ SPEC.md             the frozen contract and full test plan
 ```
 
 ```bash
-npm test             # Excel fidelity + independent openpyxl check + scale
-npm run typecheck    # both tsconfigs
-npm run dev          # UI on :5173  (run `npm run dev:api` alongside for the API)
-npm run verify:api   # T-2 suite against a running Worker
+npm test                # Excel fidelity + independent openpyxl check + scale
+npm run typecheck       # both tsconfigs
+npm run dev             # UI on :5173  (run `npm run dev:api` alongside for the API)
+npm run verify:api      # T-2 suite against a running Worker
+npm run verify:catalog  # checks the QuickVerse catalog parses, SKUs stay stable across
+                        # re-parses, and overridden exports stay byte-faithful
+npm run seed:quickverse # uploads QuickVerse_Master_Catalog.xlsx to a local dev server
+                        # (run `npm run dev:api` first)
 ```
 
 **The one thing to understand before changing `xlsx.js`:** exports are lossless because chosen

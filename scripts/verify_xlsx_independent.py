@@ -152,5 +152,43 @@ def t_special():
     return f"{len(out)} rows, e.g. {lays[0]}"
 check('T-1.5h', 'apostrophes and ampersands survive the round trip', t_special)
 
+# ---------------------------------------------------------------- overrides (T-1.14/T-1.20)
+
+def t_override_mixed():
+    path = os.path.join(OUT, 'override-mixed.xlsx')
+    assert os.path.exists(path), "override-mixed.xlsx missing -- run verify-xlsx.mjs first"
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        wb = openpyxl.load_workbook(path)
+        ws = wb['bulk_upload_template']
+        dvs = ws.data_validations.dataValidation
+        # edited row reads back with exact values and numeric types
+        rows = list(ws.iter_rows(min_row=2, values_only=True))
+        rows = [r for r in rows if any(c is not None and str(c).strip() != "" for c in r)]
+        wb.close()
+    msgs = [str(x.message) for x in w]
+    assert not msgs, f"openpyxl warnings on overrides file: {msgs}"
+    assert len(dvs) == 23, f"expected 23 validations, found {len(dvs)}"
+    names = [r[3] for r in rows]
+    assert 'EDITED' in names, f"edited name missing: {names[:3]}"
+    idx = names.index('EDITED')
+    assert isinstance(rows[idx][4], (int, float)) and rows[idx][4] == 99, f"MRP wrong: {rows[idx][4]!r}"
+    assert isinstance(rows[idx][5], (int, float)) and rows[idx][5] == 88, f"price wrong: {rows[idx][5]!r}"
+    return f"{len(rows)} rows, EDITED reads back MRP=99 price=88 numeric"
+check('T-1.20b', 'overrides file loads clean and edited values read back exactly', t_override_mixed)
+
+def t_override_price():
+    path = os.path.join(OUT, 'override-price.xlsx')
+    assert os.path.exists(path), "override-price.xlsx missing -- run verify-xlsx.mjs first"
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    ws = wb['bulk_upload_template']
+    rows = [r for r in ws.iter_rows(min_row=2, values_only=True)
+            if any(c is not None and str(c).strip() != "" for c in r)]
+    wb.close()
+    assert len(rows) == 1, f"expected 1 row, got {len(rows)}"
+    assert rows[0][5] == 38 and isinstance(rows[0][5], (int, float)), f"price wrong: {rows[0][5]!r}"
+    return "price=38 numeric"
+check('T-1.13b', 'overridden price reads back as a number via openpyxl', t_override_price)
+
 print(f"\n  {passed} passed, {failed} failed\n")
 sys.exit(1 if failed else 0)

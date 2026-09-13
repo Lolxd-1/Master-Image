@@ -51,7 +51,16 @@ export type DecisionValue = 0 | 1;
 
 export interface DecisionItem {
   readonly sku: string;
-  readonly value: DecisionValue;
+  readonly value: DecisionValue | null;
+}
+
+export type OverrideField = 'name' | 'size' | 'mrp' | 'price';
+export type OverridesMap = Record<string, Partial<Record<OverrideField, string>>>;
+
+export interface OverrideItem {
+  readonly sku: string;
+  readonly field: OverrideField;
+  readonly value: string | null;
 }
 
 /** sku -> 0|1, for the calling user only. May contain SKUs absent from the live catalog. */
@@ -61,6 +70,7 @@ export interface ProgressEntry {
   readonly decided: number;
   readonly yes: number;
   readonly total: number;
+  readonly lastActive: number | null;
 }
 
 /** username -> that user's progress. Admin only. */
@@ -237,12 +247,20 @@ export async function activateCatalog(id: number): Promise<ActivateCatalogResult
 
 /* ------------------------------------------------------------------ decisions */
 
-export async function fetchDecisions(): Promise<DecisionsMap> {
-  return get<DecisionsMap>('/api/decisions');
+export async function fetchDecisions(user?: string): Promise<DecisionsMap> {
+  return get<DecisionsMap>(user ? `/api/decisions?user=${encodeURIComponent(user)}` : '/api/decisions');
 }
 
 export async function postDecisions(items: readonly DecisionItem[]): Promise<{ saved: number }> {
   return postJson<{ saved: number }>('/api/decisions', { items });
+}
+
+export async function fetchOverrides(user?: string): Promise<OverridesMap> {
+  return get<OverridesMap>(user ? `/api/overrides?user=${encodeURIComponent(user)}` : '/api/overrides');
+}
+
+export async function postOverrides(items: readonly OverrideItem[]): Promise<{ saved: number }> {
+  return postJson<{ saved: number }>('/api/overrides', { items });
 }
 
 /* ------------------------------------------------------------------ admin progress */

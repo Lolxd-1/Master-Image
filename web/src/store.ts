@@ -1,17 +1,20 @@
 /**
- * App state: session, catalog, products, decisions, and the offline outbox — SPEC.md §9.5.
+ * App state: session, catalog, products, decisions, overrides, and the offline outbox — SPEC.md §9.5.
  *
- * The persistence rule that shapes this whole file: a decision is written to `localStorage`
- * synchronously, before anything async happens. The UI reads that write back immediately and
- * never waits on the network. A debounced background loop drains a durable outbox to
- * `POST /api/decisions`, batched and retried with backoff. All of that state survives a reload
- * because the outbox itself is the thing sitting in `localStorage`, not just an in-memory queue.
+ * The persistence rule that shapes this whole file: every write (decide, undecide, bulk, edit)
+ * hits `localStorage` synchronously, before anything async happens. The UI reads that write back
+ * immediately and never waits on the network. A debounced background loop drains durable outboxes
+ * to `POST /api/decisions` (`value: null` = DELETE/undecided) and `POST /api/overrides`,
+ * batched and retried with backoff. All of that state survives a reload because the outboxes
+ * themselves sit in `localStorage`, not just an in-memory queue.
  *
- * Decisions are keyed server-side by `(username, sku)`, not by catalog — a re-uploaded catalog
- * can leave stale SKUs in `GET /api/decisions` that no longer exist in `products`. Every derived
- * count in this file (`overallDecided`, `overallYes`, `getYesSkusInOrder`, `categoryProgress`)
- * walks `products` and looks up `decisions` by SKU — never the other way around — so those stale
- * entries are silently ignored everywhere it matters, export included.
+ * Decisions and overrides are keyed by `(username, sku)` — they outlive any one catalog.
+ * Every derived count walks `products` and looks up state by SKU — never the other way around —
+ * so stale entries for vanished SKUs are silently ignored everywhere it matters, export included.
+ *
+ * Progress and resume are derived from actual decided counts, never from a cursor: search,
+ * list-select and review may decide out of order, so "first undecided" is computed by lookup,
+ * not by assuming a prefix (AUDIT D-08/D-09).
  */
 
 import {
@@ -20,23 +23,31 @@ import {
   fetchCatalogProducts,
   fetchDecisions,
   fetchMe,
+  fetchOverrides,
   login as apiLogin,
   logout as apiLogout,
   postDecisions,
+  postOverrides,
   type CatalogMeta,
   type DecisionItem,
   type DecisionValue,
+  type OverrideField,
+  type OverrideItem,
+  type OverridesMap,
   type Product,
   type Session,
 } from './api';
 import { groupByCategory } from './xlsx.js';
 
 export type SyncStatus = 'saving' | 'saved' | 'offline';
+export type { OverrideField };
 
 export interface Category {
   readonly name: string;
   readonly items: Product[];
 }
+
+export type OverrideValues = Partial<Record<OverrideField, string>>;
 
 const FLUSH_DEBOUNCE_MS = 1000;
 const FLUSH_BASE_DELAY_MS = 1000;
@@ -49,7 +60,7 @@ function lsGet<T>(key: string): T | null {
     const raw = localStorage.getItem(LS_PREFIX + key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
-    return null; // storage disabled, full, or the value was corrupt JSON — cache misses are safe
+    return null; // storage disabled, full, or corrupt JSON — cache misses are safe
   }
 }
 
@@ -57,8 +68,7 @@ function lsSet(key: string, value: unknown): void {
   try {
     localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
   } catch {
-    // Quota exceeded or storage disabled (private browsing). The app still works; it just
-    // starts cold next time instead of from cache.
+    // Quota exceeded or storage disabled. The app still works; it starts cold next time.
   }
 }
 
@@ -70,6 +80,13 @@ function lsRemove(key: string): void {
   }
 }
 
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 class Store {
   session: Session | null = null;
   catalog: CatalogMeta | null = null;
@@ -77,11 +94,16 @@ class Store {
   categories: Category[] = [];
 
   private decisions = new Map<string, DecisionValue>();
-  private outbox = new Map<string, DecisionValue>();
+  /** sku -> value|null; null = tombstone: delete the row server-side (durable undecide). */
+  private outbox = new Map<string, DecisionValue | null>();
+  private overrides = new Map<string, OverrideValues>();
+  /** `${sku} ${field}` -> value|null; null = reset this field server-side. */
+  private overridesOutbox = new Map<string, string | null>();
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private flushDelay = FLUSH_BASE_DELAY_MS;
   private flushing = false;
-  private status: SyncStatus = 'saved';
+  /** Until the first load completes the chip must not claim "Saved" (AUDIT D-19). */
+  private status: SyncStatus = 'saving';
   private statusListeners = new Set<(status: SyncStatus) => void>();
 
   /** Called once by main.ts on app load. Populates session, catalog, products and decisions. */
@@ -99,6 +121,7 @@ class Store {
     if (!session) {
       this.session = null;
       lsRemove('session');
+      this.setStatus('saved');
       return; // main.ts routes to the login screen
     }
 
@@ -107,6 +130,9 @@ class Store {
 
     await this.loadCatalogAndProducts();
     await this.loadDecisions();
+    await this.loadOverrides();
+    this.setStatus(this.outbox.size > 0 || this.overridesOutbox.size > 0 ? 'saving' : 'saved');
+    if (this.outbox.size > 0 || this.overridesOutbox.size > 0) this.scheduleFlush(0);
   }
 
   async login(username: string, password: string): Promise<void> {
@@ -115,6 +141,8 @@ class Store {
     lsSet('session', session);
     await this.loadCatalogAndProducts();
     await this.loadDecisions();
+    await this.loadOverrides();
+    this.setStatus(this.outbox.size > 0 || this.overridesOutbox.size > 0 ? 'saving' : 'saved');
   }
 
   async logout(): Promise<void> {
@@ -131,6 +159,8 @@ class Store {
       this.categories = [];
       this.decisions = new Map();
       this.outbox = new Map();
+      this.overrides = new Map();
+      this.overridesOutbox = new Map();
       this.flushDelay = FLUSH_BASE_DELAY_MS;
       this.flushing = false;
       lsRemove('session');
@@ -142,6 +172,7 @@ class Store {
   async reloadCatalog(): Promise<void> {
     await this.loadCatalogAndProducts();
     await this.loadDecisions();
+    await this.loadOverrides();
   }
 
   private async loadCatalogAndProducts(): Promise<void> {
@@ -161,8 +192,7 @@ class Store {
         if (cachedMeta) lsRemove(`products.${cachedMeta.id}`);
         return;
       }
-      // Offline (or the server is unreachable) on a return visit: fall back to whatever we
-      // cached last time rather than showing an empty app.
+      // Offline on a return visit: fall back to cache rather than showing an empty app.
       if (cachedMeta) {
         const cachedProducts = lsGet<Product[]>(`products.${cachedMeta.id}`);
         if (cachedProducts && cachedProducts.length > 0) {
@@ -212,8 +242,8 @@ class Store {
   private async loadDecisions(): Promise<void> {
     const username = this.requireSession().username;
 
-    const localOutbox = lsGet<Record<string, DecisionValue>>(`outbox.${username}`) ?? {};
-    this.outbox = new Map(Object.entries(localOutbox) as [string, DecisionValue][]);
+    const localOutbox = lsGet<Record<string, DecisionValue | null>>(`outbox.${username}`) ?? {};
+    this.outbox = new Map(Object.entries(localOutbox) as [string, DecisionValue | null][]);
 
     let server: Record<string, DecisionValue>;
     try {
@@ -224,11 +254,52 @@ class Store {
     }
 
     const merged = new Map<string, DecisionValue>(Object.entries(server) as [string, DecisionValue][]);
-    for (const [sku, value] of this.outbox) merged.set(sku, value); // local unsent wins
+    for (const [sku, value] of this.outbox) {
+      if (value === null) merged.delete(sku); // local undecide wins, even offline
+      else merged.set(sku, value);
+    }
     this.decisions = merged;
     this.persistDecisions();
 
     if (this.outbox.size > 0) this.scheduleFlush(0);
+  }
+
+  private async loadOverrides(): Promise<void> {
+    const username = this.requireSession().username;
+
+    const local = lsGet<Record<string, string | null>>(`ooutbox.${username}`) ?? {};
+    this.overridesOutbox = new Map(Object.entries(local));
+
+    let server: OverridesMap;
+    try {
+      server = await fetchOverrides();
+    } catch {
+      server = lsGet<OverridesMap>(`overrides.${username}`) ?? {};
+      this.setStatus('offline');
+    }
+
+    const merged = new Map<string, OverrideValues>();
+    for (const [sku, vals] of Object.entries(server)) merged.set(sku, { ...vals });
+    for (const [key, value] of this.overridesOutbox) {
+      const sep = key.indexOf(' ');
+      const sku = key.slice(0, sep);
+      const field = key.slice(sep + 1) as OverrideField;
+      if (value === null) {
+        const cur = merged.get(sku);
+        if (cur) {
+          delete cur[field];
+          if (Object.keys(cur).length === 0) merged.delete(sku);
+        }
+      } else {
+        const cur = merged.get(sku) ?? {};
+        cur[field] = value;
+        merged.set(sku, cur);
+      }
+    }
+    this.overrides = merged;
+    this.persistOverrides();
+
+    if (this.overridesOutbox.size > 0) this.scheduleFlush(0);
   }
 
   private requireSession(): Session {
@@ -251,13 +322,88 @@ class Store {
     this.scheduleFlush(FLUSH_DEBOUNCE_MS);
   }
 
-  /** Undo: back to "undecided" locally, and drop it from the outbox if it hadn't shipped yet. */
-  clearDecision(sku: string): void {
-    this.decisions.delete(sku);
-    this.outbox.delete(sku);
+  /** Bulk write used by list Select-all/Clear-all. Returns prior values for undo. */
+  setDecisions(items: ReadonlyArray<{ readonly sku: string; readonly value: DecisionValue }>): void {
+    for (const { sku, value } of items) {
+      this.decisions.set(sku, value);
+      this.outbox.set(sku, value);
+    }
     this.persistDecisions();
     this.persistOutbox();
+    this.setStatus('saving');
+    this.scheduleFlush(FLUSH_DEBOUNCE_MS);
   }
+
+  /**
+   * Durable undecide (AUDIT D-02): delete locally AND enqueue a `null` tombstone so the
+   * already-flushed server row is deleted on flush. Never just drops the outbox entry —
+   * that is what made undo silently un-do itself.
+   */
+  clearDecision(sku: string): void {
+    this.decisions.delete(sku);
+    this.outbox.set(sku, null);
+    this.persistDecisions();
+    this.persistOutbox();
+    this.setStatus('saving');
+    this.scheduleFlush(FLUSH_DEBOUNCE_MS);
+  }
+
+  /** Restore a snapshot (bulk undo). `undefined` = was undecided. */
+  restoreDecisions(snapshot: ReadonlyMap<string, DecisionValue | undefined>): void {
+    for (const [sku, prev] of snapshot) {
+      if (prev === undefined) {
+        this.decisions.delete(sku);
+        this.outbox.set(sku, null);
+      } else {
+        this.decisions.set(sku, prev);
+        this.outbox.set(sku, prev);
+      }
+    }
+    this.persistDecisions();
+    this.persistOutbox();
+    this.setStatus('saving');
+    this.scheduleFlush(FLUSH_DEBOUNCE_MS);
+  }
+
+  /* -------------------------------------------------------------- overrides */
+
+  getOverride(sku: string): OverrideValues | undefined {
+    return this.overrides.get(sku);
+  }
+
+  /** Effective display values with overrides applied (cards, lists, review, export all use this). */
+  displayOf(p: Product): { name: string; mrp: number; price: number; size: string; edited: boolean } {
+    const ov = this.overrides.get(p.s);
+    return {
+      name: ov?.name ?? p.n,
+      mrp: ov?.mrp !== undefined ? Number(ov.mrp) : p.m,
+      price: ov?.price !== undefined ? Number(ov.price) : p.p,
+      size: ov?.size ?? '',
+      edited: ov !== undefined,
+    };
+  }
+
+  get overridesCount(): number {
+    return this.overrides.size;
+  }
+
+  setOverride(sku: string, field: OverrideField, value: string | null): void {
+    const cur = this.overrides.get(sku) ?? {};
+    if (value === null) {
+      delete cur[field];
+      if (Object.keys(cur).length === 0) this.overrides.delete(sku);
+      else this.overrides.set(sku, { ...cur });
+    } else {
+      this.overrides.set(sku, { ...cur, [field]: value });
+    }
+    this.overridesOutbox.set(`${sku} ${field}`, value);
+    this.persistOverrides();
+    this.persistOverridesOutbox();
+    this.setStatus('saving');
+    this.scheduleFlush(FLUSH_DEBOUNCE_MS);
+  }
+
+  /* -------------------------------------------------------------- derived counts */
 
   /** Decided count across the whole catalog (yes + no), ignoring decisions for unknown SKUs. */
   get overallDecided(): number {
@@ -276,6 +422,12 @@ class Store {
     return n;
   }
 
+  get overallNo(): number {
+    let n = 0;
+    for (const p of this.products) if (this.decisions.get(p.s) === 0) n++;
+    return n;
+  }
+
   /** For export: yes-SKUs in original catalog order. Walks `products`, never `decisions`. */
   getYesSkusInOrder(): string[] {
     const out: string[] = [];
@@ -283,10 +435,73 @@ class Store {
     return out;
   }
 
-  categoryProgress(items: readonly Product[]): { done: number; total: number } {
+  categoryProgress(items: readonly Product[]): { done: number; yes: number; no: number; total: number } {
     let done = 0;
-    for (const p of items) if (this.decisions.has(p.s)) done++;
-    return { done, total: items.length };
+    let yes = 0;
+    for (const p of items) {
+      const v = this.decisions.get(p.s);
+      if (v !== undefined) {
+        done++;
+        if (v === 1) yes++;
+      }
+    }
+    return { done, yes, no: done - yes, total: items.length };
+  }
+
+  /** Actual decided count for a category — never a cursor (AUDIT D-09). */
+  categoryDecidedCount(items: readonly Product[]): number {
+    let n = 0;
+    for (const p of items) if (this.decisions.has(p.s)) n++;
+    return n;
+  }
+
+  /** First undecided by lookup — correct even when decisions are out of order (AUDIT D-08). */
+  firstUndecidedIndex(items: readonly Product[]): number {
+    for (let i = 0; i < items.length; i++) {
+      if (!this.decisions.has(items[i].s)) return i;
+    }
+    return items.length;
+  }
+
+  /** Case/diacritic-insensitive name+SKU search (AUDIT D-06). Capped for render sanity. */
+  search(q: string, limit = 400): Product[] {
+    const needle = norm(q.trim());
+    if (!needle) return [];
+    const out: Product[] = [];
+    for (const p of this.products) {
+      const ov = this.overrides.get(p.s);
+      if (norm(ov?.name ?? p.n).includes(needle) || norm(p.s).includes(needle)) {
+        out.push(p);
+        if (out.length >= limit) break;
+      }
+    }
+    return out;
+  }
+
+  /** "Continue where you left off" — UI convenience in localStorage, not server state. */
+  getContinue(): { category: string; sku: string } | null {
+    if (!this.session) return null;
+    return lsGet<{ category: string; sku: string }>(`continue.${this.session.username}`);
+  }
+
+  setContinue(category: string, sku: string): void {
+    if (!this.session) return;
+    lsSet(`continue.${this.session.username}`, { category, sku });
+  }
+
+  clearContinue(): void {
+    if (!this.session) return;
+    lsRemove(`continue.${this.session.username}`);
+  }
+
+  deckMode(): 'swipe' | 'list' {
+    if (!this.session) return 'swipe';
+    return lsGet<'swipe' | 'list'>(`deckmode.${this.session.username}`) ?? 'swipe';
+  }
+
+  setDeckMode(mode: 'swipe' | 'list'): void {
+    if (!this.session) return;
+    lsSet(`deckmode.${this.session.username}`, mode);
   }
 
   /* -------------------------------------------------------------- sync status */
@@ -318,7 +533,7 @@ class Store {
 
   private async flush(): Promise<void> {
     if (this.flushing) return;
-    if (this.outbox.size === 0) {
+    if (this.outbox.size === 0 && this.overridesOutbox.size === 0) {
       this.setStatus('saved');
       return;
     }
@@ -326,25 +541,55 @@ class Store {
     this.flushing = true;
     this.setStatus('saving');
     try {
-      const batch = [...this.outbox].slice(0, MAX_BATCH);
-      const items: DecisionItem[] = batch.map(([sku, value]) => ({ sku, value }));
-      await postDecisions(items);
-
-      for (const [sku, value] of batch) {
-        if (this.outbox.get(sku) === value) this.outbox.delete(sku); // untouched since the snapshot
-      }
-      this.persistOutbox();
-      this.flushDelay = FLUSH_BASE_DELAY_MS;
-
+      // Decisions first ( tombstones included ), then overrides — both ≤500 per request.
       if (this.outbox.size > 0) {
+        const batch = [...this.outbox].slice(0, MAX_BATCH);
+        const items: DecisionItem[] = batch.map(([sku, value]) => ({ sku, value }));
+        try {
+          await postDecisions(items);
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 400) {
+            // Malformed batch would loop forever — drop it; local state is already correct.
+          } else {
+            throw err;
+          }
+        }
+        for (const [sku, value] of batch) {
+          if (this.outbox.get(sku) === value) this.outbox.delete(sku);
+        }
+        this.persistOutbox();
+      }
+
+      if (this.overridesOutbox.size > 0) {
+        const batch = [...this.overridesOutbox].slice(0, MAX_BATCH);
+        const items: OverrideItem[] = batch.map(([key, value]) => {
+          const sep = key.indexOf(' ');
+          return { sku: key.slice(0, sep), field: key.slice(sep + 1) as OverrideField, value };
+        });
+        try {
+          await postOverrides(items);
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 400) {
+            // Validation failure (e.g. price > MRP raced an edit) — keep local, drop the send
+            // so we never spin; the next edit re-enqueues.
+          } else {
+            // Put the batch back conceptually (we didn't delete yet) and retry with backoff.
+            throw err;
+          }
+        }
+        for (const [key, value] of batch) {
+          if (this.overridesOutbox.get(key) === value) this.overridesOutbox.delete(key);
+        }
+        this.persistOverridesOutbox();
+      }
+
+      this.flushDelay = FLUSH_BASE_DELAY_MS;
+      if (this.outbox.size > 0 || this.overridesOutbox.size > 0) {
         this.scheduleFlush(0); // more than 500 pending — drain the rest right away
       } else {
         this.setStatus('saved');
       }
     } catch (err) {
-      // A 400 here (e.g. a malformed item) would loop forever; anything else is a transient
-      // network failure worth retrying. Either way the safe move is the same: back off and
-      // tell the user we're offline rather than silently dropping their decisions.
       void err;
       this.setStatus('offline');
       this.flushDelay = Math.min(this.flushDelay * 2, FLUSH_MAX_DELAY_MS);
@@ -364,10 +609,21 @@ class Store {
     lsSet(`outbox.${this.session.username}`, Object.fromEntries(this.outbox));
   }
 
+  private persistOverrides(): void {
+    if (!this.session) return;
+    lsSet(`overrides.${this.session.username}`, Object.fromEntries(this.overrides));
+  }
+
+  private persistOverridesOutbox(): void {
+    if (!this.session) return;
+    lsSet(`ooutbox.${this.session.username}`, Object.fromEntries(this.overridesOutbox));
+  }
+
   /** Wired once at module load (below) — connectivity events are global, not tied to login state. */
   handleOnline(): void {
     this.flushDelay = FLUSH_BASE_DELAY_MS;
-    if (this.outbox.size > 0) this.scheduleFlush(0);
+    if (this.outbox.size > 0 || this.overridesOutbox.size > 0) this.scheduleFlush(0);
+    else if (this.session) this.setStatus('saved');
   }
 
   handleOffline(): void {

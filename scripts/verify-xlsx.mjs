@@ -11,8 +11,8 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { unzipSync, strFromU8 } from 'fflate';
-import { parseWorkbook, buildWorkbook } from '../web/src/xlsx.js';
+import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate';
+import { parseWorkbook, buildWorkbook, applyOverrides, UploadError } from '../web/src/xlsx.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const MASTER = join(ROOT, 'Master excel.xlsx');
@@ -252,6 +252,236 @@ t('T-1.12', 'table range and dimension are internally consistent', () => {
   const emitted = dataRows(xml).length;
   ok(emitted <= Number(dimRef[2]), `emitted ${emitted} rows but dimension declares ${dimRef[2]}`);
   return `${emitted} rows within ${dimRef[1]}`;
+});
+
+/* ---------------------------------------------------------------- T-1.13 ... T-1.22: overrides */
+
+t('T-1.13', 'override a price: F is numeric with the new value, E untouched', () => {
+  const prod = products.find((p) => p.m >= 50) ?? products[0];
+  const sku = prod.s;
+  const outBytes = buildWorkbook(skeleton, rows, [sku], { [sku]: { price: '38' } });
+  writeFileSync(join(OUT, 'override-price.xlsx'), outBytes);
+  const row = dataRows(sheetOf(outBytes).xml)[1];
+  const f = new RegExp('<c r="F\\d+"([^>]*)><v>(.*?)</v></c>').exec(row);
+  ok(f, 'F cell missing');
+  ok(!/t="(s|inlineStr|str)"/.test(f[1]), 'F became a text cell');
+  eq(f[2], '38', 'F value');
+  const e = new RegExp('<c r="E\\d+"([^>]*)><v>(.*?)</v></c>').exec(row);
+  ok(e, 'E cell missing');
+  return `F=38 numeric, E=${e[2]} untouched`;
+});
+
+t('T-1.14', 'override a name: inlineStr, sharedStrings.xml byte-identical', () => {
+  const sku = allSkus[1];
+  const outBytes = buildWorkbook(skeleton, rows, [sku], { [sku]: { name: '5 STAR 25 GM' } });
+  const out = unzipSync(outBytes);
+  const src = unzipSync(masterBytes);
+  eq(sha(out['xl/sharedStrings.xml']), sha(src['xl/sharedStrings.xml']), 'sharedStrings.xml changed');
+  const row = dataRows(strFromU8(out[SHEET]))[1];
+  ok(/t="inlineStr"/.test(row), 'name cell is not inlineStr');
+  ok(/xml:space="preserve">5 STAR 25 GM</.test(row), 'new name missing');
+  return 'inlineStr + sharedStrings untouched';
+});
+
+t('T-1.15', 'fill an empty Size (K): value present, style preserved', () => {
+  const sku = allSkus[2];
+  const styleAttr = (tag) => (/s="([^"]*)"/.exec(tag || '') || [])[1] ?? null;
+  const beforeStyle = styleAttr((/<c r="K\d+"([^>]*)>/.exec(rows[sku]) || [])[1]);
+  const outBytes = buildWorkbook(skeleton, rows, [sku], { [sku]: { size: '25 GM' } });
+  const row = dataRows(sheetOf(outBytes).xml)[1];
+  const after = /<c r="K\d+"([^>]*)>/.exec(row);
+  ok(after, 'K cell missing after override');
+  eq(styleAttr(after[1]), beforeStyle, 'K style attribute changed');
+  ok(/25 GM/.test(row), 'K value missing');
+  return `style s="${beforeStyle}" preserved (t=s→inlineStr is by design)`;
+});
+
+t('T-1.16', 'rows with no override stay byte-identical in a mixed export', () => {
+  const chosen = allSkus.slice(0, 20);
+  const ovSku = chosen[0];
+  const outBytes = buildWorkbook(skeleton, rows, chosen, { [ovSku]: { price: '9.5' } });
+  const outRows = dataRows(sheetOf(outBytes).xml).slice(1);
+  for (let i = 1; i < chosen.length; i++) {
+    eq(contentOf(outRows[i]), contentOf(rows[chosen[i]]), `unedited row ${i}`);
+  }
+  return '19/20 rows byte-identical';
+});
+
+t('T-1.17', 'every other part stays hash-identical with overrides applied', () => {
+  const outBytes = buildWorkbook(skeleton, rows, allSkus.slice(0, 10), {
+    [allSkus[0]]: { name: 'EDITED NAME', price: '5' },
+  });
+  const out = unzipSync(outBytes);
+  const src = unzipSync(masterBytes);
+  const differing = Object.keys(src).sort().filter((k) => k !== SHEET && sha(src[k]) !== sha(out[k]));
+  ok(differing.length === 0, `these parts changed: ${differing.join(', ')}`);
+  return '46/47 parts identical with overrides';
+});
+
+t('T-1.18', 'special characters in an override survive and XML stays well-formed', () => {
+  const sku = allSkus[3];
+  const tricky = 'A & B <C> \'D\' "E" मसाला 😀';
+  const outBytes = buildWorkbook(skeleton, rows, [sku], { [sku]: { name: tricky } });
+  writeFileSync(join(OUT, 'override-special.xlsx'), outBytes);
+  const { xml } = sheetOf(outBytes);
+  const bad = xml.match(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g);
+  ok(!bad, `malformed entity (${bad && bad.length})`);
+  ok(xml.includes('A &amp; B &lt;C&gt;'), 'escaping wrong');
+  return 'amp/lt/gt + Devanagari + emoji survive';
+});
+
+t('T-1.19', 'self-closing cell override becomes a valid populated cell', () => {
+  // Column C is self-closing in the source; exercise the same path via Size (K) on a row
+  // whose K cell is self-closing or empty-styled.
+  const sku = allSkus.find((s) => /<c r="K\d+"[^>]*\/>/.test(rows[s])) ?? allSkus[0];
+  const before = /<c r="K\d+"([^>]*)\/>/.exec(rows[sku]);
+  const outBytes = buildWorkbook(skeleton, rows, [sku], { [sku]: { size: '100 GM' } });
+  const row = dataRows(sheetOf(outBytes).xml)[1];
+  ok(/<c r="K\d+"[^>]*t="inlineStr">.*100 GM.*<\/c>/.test(row), 'K not populated');
+  if (before) {
+    const after = /<c r="K\d+"([^>]*)>/.exec(row);
+    const bs = /s="([^"]*)"/.exec(before[1]);
+    const as = /s="([^"]*)"/.exec(after[1]);
+    eq(as?.[1] ?? null, bs?.[1] ?? null, 'style changed');
+  }
+  return `SKU ${sku.slice(0, 8)}… populated, style preserved`;
+});
+
+t('T-1.20', 'overrides export opens clean: validations + protection intact', () => {
+  const outBytes = buildWorkbook(skeleton, rows, allSkus.slice(0, 50), {
+    [allSkus[0]]: { name: 'EDITED', mrp: '99', price: '88' },
+    [allSkus[1]]: { size: '50 GM' },
+  });
+  writeFileSync(join(OUT, 'override-mixed.xlsx'), outBytes);
+  const { xml } = sheetOf(outBytes);
+  const count = (re) => (xml.match(re) || []).length;
+  eq(count(/<dataValidation[\s>]/g), 23, 'dataValidation blocks');
+  eq(count(/<sheetProtection\b/g), 1, 'sheetProtection');
+  eq(count(/<conditionalFormatting\b/g), 2, 'conditionalFormatting');
+  return '23 + protection + 2 CF intact with overrides';
+});
+
+t('T-1.21', 'price > MRP can never reach the file', () => {
+  let threw = false;
+  try {
+    buildWorkbook(skeleton, rows, [allSkus[0]], { [allSkus[0]]: { mrp: '40', price: '45' } });
+  } catch {
+    threw = true;
+  }
+  ok(threw, 'F > E export should throw');
+  // applyOverrides alone also fails closed
+  let threw2 = false;
+  try {
+    applyOverrides(rows[allSkus[0]], { mrp: '10', price: '11' });
+  } catch {
+    threw2 = true;
+  }
+  ok(threw2, 'applyOverrides should throw on F > E');
+  return 'throws before bytes are emitted';
+});
+
+t('T-1.22', 'decimal formatting: bare decimals, no exponent or trailing dot', () => {
+  for (const [raw, want] of [['12', '12'], ['12.5', '12.5'], ['1234.75', '1234.75'], ['12.50', '12.5']]) {
+    const out = applyOverrides(rows[allSkus[0]], { mrp: '99999', price: raw });
+    const m = new RegExp('<c r="F\\d+"[^>]*><v>(.*?)</v></c>').exec(out);
+    ok(m, 'F missing');
+    eq(m[1], want, `price ${raw}`);
+    ok(!/[eE.]$/.test(m[1]), `bad decimal: ${m[1]}`);
+  }
+  return '12 / 12.5 / 1234.75 round-trip numeric';
+});
+
+/* ---------------------------------------------------------------- T-1.23: synthetic SKUs */
+
+/**
+ * Minimal in-memory workbook, built from scratch, for exercising the synthetic-SKU path without
+ * depending on any particular master file. Data cells use inlineStr so no sharedStrings.xml is
+ * needed at all — parseWorkbook only requires xl/workbook.xml, its rels, and the sheet itself.
+ * @param {Array<{sku?: string, name: string, mrp: number, price?: number, biz: string, prod: string, image?: string}>} descriptors
+ */
+function buildFixtureWorkbook(descriptors) {
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const inline = (col, rNum, text) =>
+    `<c r="${col}${rNum}" t="inlineStr"><is><t>${esc(text)}</t></is></c>`;
+  const numeric = (col, rNum, n) => `<c r="${col}${rNum}" t="n"><v>${n}</v></c>`;
+
+  const headerRow = `<row r="1">${inline('A', 1, 'SKU ID (Not to be Edited)')}</row>`;
+  const dataRows = descriptors.map((d, i) => {
+    const r = i + 2;
+    return `<row r="${r}">` +
+      (d.sku !== undefined ? inline('A', r, d.sku) : '') +
+      inline('D', r, d.name) +
+      numeric('E', r, d.mrp) +
+      numeric('F', r, d.price ?? d.mrp) +
+      inline('G', r, d.biz) +
+      inline('H', r, d.prod) +
+      (d.image ? inline('P', r, d.image) : '') +
+      `</row>`;
+  });
+
+  const workbookXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+    '<sheets><sheet name="bulk_upload_template" sheetId="1" r:id="rId1"/></sheets></workbook>';
+  const relsXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" ' +
+    'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" ' +
+    'Target="worksheets/sheet1.xml"/></Relationships>';
+  const sheetXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    `<sheetData>${headerRow}${dataRows.join('')}</sheetData></worksheet>`;
+
+  return zipSync({
+    'xl/workbook.xml': strToU8(workbookXml),
+    'xl/_rels/workbook.xml.rels': strToU8(relsXml),
+    'xl/worksheets/sheet1.xml': strToU8(sheetXml),
+  });
+}
+
+t('T-1.23', 'mixed workbook: real and synthetic SKUs coexist', () => {
+  const fixture = buildFixtureWorkbook([
+    { sku: 'SKU-REAL-1', name: 'Real Product One', mrp: 100, biz: 'FOOD', prod: 'Snacks' },
+    { name: 'No Sku Product A', mrp: 50, biz: 'FOOD', prod: 'Snacks', image: 'http://img/a.jpg' },
+    { name: 'No Sku Product B', mrp: 75, biz: 'FOOD', prod: 'Drinks' },
+    // Content-identical to "No Sku Product A" above, to exercise the -2 collision suffix.
+    { name: 'No Sku Product A', mrp: 50, biz: 'FOOD', prod: 'Snacks', image: 'http://img/a.jpg' },
+    { sku: 'SKU-REAL-2', name: 'Real Product Two', mrp: 200, biz: 'FOOD', prod: 'Drinks' },
+  ]);
+  const { products } = parseWorkbook(fixture);
+  eq(products.length, 5, 'product count');
+
+  const [real1, synthA, synthB, synthADup, real2] = products;
+  eq(real1.s, 'SKU-REAL-1', 'real SKU kept unchanged');
+  eq(real2.s, 'SKU-REAL-2', 'second real SKU kept unchanged');
+  ok(synthA.s.startsWith('qv-'), 'row with no SKU should get a synthetic id');
+  ok(synthB.s.startsWith('qv-'), 'row with no SKU should get a synthetic id');
+  ok(synthADup.s.startsWith('qv-'), 'row with no SKU should get a synthetic id');
+
+  // Identical content (name/cat/mrp/image) must collide and get suffixed, not clobber.
+  const baseHash = synthA.s;
+  eq(synthADup.s, `${baseHash}-2`, 'content-identical synthetic SKU should get the -2 suffix');
+  ok(synthB.s !== synthA.s, 'different-content rows must not collide');
+
+  const skus = products.map((p) => p.s);
+  eq(new Set(skus).size, skus.length, 'all 5 SKUs unique');
+  return `real=[${real1.s}, ${real2.s}], synthetic=[${synthA.s}, ${synthB.s}, ${synthADup.s}]`;
+});
+
+t('T-1.24', 'duplicate REAL SKUs still throw in a mixed workbook', () => {
+  const fixture = buildFixtureWorkbook([
+    { sku: 'SKU-REAL-1', name: 'Real Product One', mrp: 100, biz: 'FOOD', prod: 'Snacks' },
+    { name: 'No Sku Product', mrp: 50, biz: 'FOOD', prod: 'Snacks' },
+    { sku: 'SKU-REAL-1', name: 'Real Product One Again', mrp: 120, biz: 'FOOD', prod: 'Snacks' },
+  ]);
+  let err = null;
+  try { parseWorkbook(fixture); } catch (e) { err = e; }
+  ok(err instanceof UploadError, 'duplicate real SKU should throw UploadError');
+  ok(/appears more than once/.test(err.message), `unexpected message: ${err.message}`);
+  return 'throws: ' + err.message;
 });
 
 /* ---------------------------------------------------------------- summary */

@@ -291,9 +291,19 @@ async function handleGetDecisions(request: Request, env: Env): Promise<Response>
   const session = await requireUser(request, env);
   if (session instanceof Response) return session;
 
+  // Admin may read another user's decisions (?user=) to build that user's file (SPEC §8.8).
+  // Pickers asking for anyone else's data get 403 — never leak cross-user state.
+  const url = new URL(request.url);
+  const target = url.searchParams.get('user');
+  const username = target ?? session.username;
+  if (target !== null && target !== session.username) {
+    if (session.role !== 'admin') return forbidden('Admins only.');
+    if (!(target in users)) return notFound(`No such user: ${target}.`);
+  }
+
   const { results } = await env.DB
     .prepare('SELECT sku, value FROM decision WHERE username = ?')
-    .bind(session.username)
+    .bind(username)
     .all<DecisionRow>();
 
   const out: Record<string, 0 | 1> = {};
@@ -303,11 +313,17 @@ async function handleGetDecisions(request: Request, env: Env): Promise<Response>
 
 interface DecisionItem {
   sku: string;
-  value: 0 | 1;
+  value: 0 | 1 | null;
 }
 
 function isDecisionItem(x: unknown): x is DecisionItem {
-  return isRecord(x) && typeof x.sku === 'string' && x.sku.length > 0 && (x.value === 0 || x.value === 1);
+  return (
+    isRecord(x) &&
+    typeof x.sku === 'string' &&
+    x.sku.length > 0 &&
+    x.sku.length <= 100 &&
+    (x.value === 0 || x.value === 1 || x.value === null)
+  );
 }
 
 async function handlePostDecisions(request: Request, env: Env): Promise<Response> {
@@ -330,20 +346,142 @@ async function handlePostDecisions(request: Request, env: Env): Promise<Response
 
   const items: DecisionItem[] = [];
   for (const item of rawItems) {
-    if (!isDecisionItem(item)) return badRequest('Each item must be {sku: string, value: 0 | 1}.');
+    if (!isDecisionItem(item)) return badRequest('Each item must be {sku: string, value: 0 | 1 | null}.');
     items.push(item);
   }
   if (items.length === 0) return json({ saved: 0 });
 
   const now = Date.now();
-  const stmt = env.DB.prepare(
+  const upsert = env.DB.prepare(
     `INSERT INTO decision (username, sku, value, updated_at)
      VALUES (?, ?, ?, ?)
      ON CONFLICT(username, sku) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
   );
-  await env.DB.batch(items.map((item) => stmt.bind(session.username, item.sku, item.value, now)));
+  const del = env.DB.prepare('DELETE FROM decision WHERE username = ? AND sku = ?');
+  // value: null = undecided (DELETE). Mixed batches are fine — one batch, still tiny.
+  await env.DB.batch(
+    items.map((item) =>
+      item.value === null ? del.bind(session.username, item.sku) : upsert.bind(session.username, item.sku, item.value, now),
+    ),
+  );
 
   return json({ saved: items.length });
+}
+
+/* ------------------------------------------------------------------ handlers: overrides (SPEC §6.1) */
+
+interface OverrideRow {
+  sku: string;
+  field: string;
+  value: string;
+}
+
+type OverrideField = 'name' | 'size' | 'mrp' | 'price';
+
+function isOverrideField(f: unknown): f is OverrideField {
+  return f === 'name' || f === 'size' || f === 'mrp' || f === 'price';
+}
+
+function isDecimal2(s: string): boolean {
+  return /^\d+(\.\d{1,2})?$/.test(s);
+}
+
+/** Server-side shape validation. Cross-field F<=E is enforced at export (T-1.21) + live in UI. */
+function overrideValueError(field: OverrideField, value: string): string | null {
+  if (field === 'name') {
+    const t = value.trim();
+    if (!t) return 'Name cannot be empty.';
+    if (t.length > 200) return 'Name is too long (200 letters maximum).';
+    return null;
+  }
+  if (field === 'size') {
+    if (value.length > 50) return 'Pack size is too long (50 letters maximum).';
+    return null;
+  }
+  // mrp / price: bare decimals, no currency, no exponent.
+  if (!isDecimal2(value)) return 'Use at most 2 decimal places.';
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 'Enter a valid number.';
+  if (field === 'mrp') {
+    if (!(n > 0) || n > 999999.99) return 'MRP must be more than ₹0 and at most ₹999999.99.';
+    return null;
+  }
+  if (!(n >= 0) || n > 999999.99) return 'Price must be ₹0 or more and at most ₹999999.99.';
+  return null;
+}
+
+async function handleGetOverrides(request: Request, env: Env): Promise<Response> {
+  const session = await requireUser(request, env);
+  if (session instanceof Response) return session;
+
+  const url = new URL(request.url);
+  const target = url.searchParams.get('user');
+  const username = target ?? session.username;
+  if (target !== null && target !== session.username) {
+    if (session.role !== 'admin') return forbidden('Admins only.');
+    if (!(target in users)) return notFound(`No such user: ${target}.`);
+  }
+
+  const { results } = await env.DB
+    .prepare('SELECT sku, field, value FROM override WHERE username = ?')
+    .bind(username)
+    .all<OverrideRow>();
+
+  const out: Record<string, Partial<Record<OverrideField, string>>> = {};
+  for (const row of results) {
+    if (!isOverrideField(row.field)) continue;
+    (out[row.sku] ??= {})[row.field] = row.value;
+  }
+  return json(out);
+}
+
+async function handlePostOverrides(request: Request, env: Env): Promise<Response> {
+  const session = await requireUser(request, env);
+  if (session instanceof Response) return session;
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return badRequest('Request body must be valid JSON.');
+  }
+  if (!isRecord(body) || !Array.isArray(body.items)) {
+    return badRequest('Body must be {items: [{sku, field, value}]}.');
+  }
+  const rawItems = body.items;
+  if (rawItems.length > 500) {
+    return badRequest('A batch may contain at most 500 items.');
+  }
+
+  const now = Date.now();
+  const upsert = env.DB.prepare(
+    `INSERT INTO override (username, sku, field, value, updated_at)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(username, sku, field) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  );
+  const del = env.DB.prepare('DELETE FROM override WHERE username = ? AND sku = ? AND field = ?');
+  const stmts: D1PreparedStatement[] = [];
+  for (const item of rawItems) {
+    if (!isRecord(item) || typeof item.sku !== 'string' || !item.sku || item.sku.length > 100) {
+      return badRequest('Each item must be {sku: string, field: name|size|mrp|price, value: string|null}.');
+    }
+    if (!isOverrideField(item.field)) {
+      return badRequest('Each item must be {sku: string, field: name|size|mrp|price, value: string|null}.');
+    }
+    const v = (item as { value: unknown }).value;
+    if (v === null) {
+      stmts.push(del.bind(session.username, item.sku, item.field));
+      continue;
+    }
+    if (typeof v !== 'string') {
+      return badRequest('Each item must be {sku: string, field: name|size|mrp|price, value: string|null}.');
+    }
+    const err = overrideValueError(item.field, v);
+    if (err) return badRequest(err);
+    stmts.push(upsert.bind(session.username, item.sku, item.field, v, now));
+  }
+  if (stmts.length > 0) await env.DB.batch(stmts);
+  return json({ saved: rawItems.length });
 }
 
 /* ------------------------------------------------------------------ handlers: progress */
@@ -352,6 +490,7 @@ interface ProgressRow {
   username: string;
   decided: number;
   yes: number;
+  lastActive: number;
 }
 
 async function handleGetProgress(request: Request, env: Env): Promise<Response> {
@@ -365,14 +504,15 @@ async function handleGetProgress(request: Request, env: Env): Promise<Response> 
   const [catalog, { results }] = await Promise.all([
     getActiveCatalog(env.DB),
     env.DB.prepare(
-      `SELECT username, COUNT(*) AS decided, SUM(CASE WHEN value = 1 THEN 1 ELSE 0 END) AS yes
+      `SELECT username, COUNT(*) AS decided, SUM(CASE WHEN value = 1 THEN 1 ELSE 0 END) AS yes,
+              MAX(updated_at) AS lastActive
        FROM decision GROUP BY username`,
     ).all<ProgressRow>(),
   ]);
 
   const total = catalog ? catalog.product_count : 0;
   const byUser = new Map(results.map((row) => [row.username, row]));
-  const out: Record<string, { decided: number; yes: number; total: number }> = {};
+  const out: Record<string, { decided: number; yes: number; total: number; lastActive: number | null }> = {};
   for (const [username, record] of Object.entries(users)) {
     if (record.role !== 'picker') continue;
     const row = byUser.get(username);
@@ -380,6 +520,7 @@ async function handleGetProgress(request: Request, env: Env): Promise<Response> 
       decided: row ? Number(row.decided) : 0,
       yes: row ? Number(row.yes) : 0,
       total,
+      lastActive: row && row.lastActive ? Number(row.lastActive) : null,
     };
   }
   return json(out);
@@ -409,6 +550,10 @@ async function routeApi(request: Request, env: Env, path: string): Promise<Respo
       return handleGetDecisions(request, env);
     case 'POST /api/decisions':
       return handlePostDecisions(request, env);
+    case 'GET /api/overrides':
+      return handleGetOverrides(request, env);
+    case 'POST /api/overrides':
+      return handlePostOverrides(request, env);
     case 'GET /api/progress':
       return handleGetProgress(request, env);
   }

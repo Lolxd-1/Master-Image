@@ -5,3 +5,6 @@ dist/
 .dev.vars
 *.local
 .DS_Store
+
+# scratch: local browser verification harness
+.probe/

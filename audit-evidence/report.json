@@ -1,0 +1,2867 @@
+{
+  "generatedAt": "2026-09-09T21:54:16.814Z",
+  "seeded": {
+    "decided": 65,
+    "yes": 49,
+    "categories": [
+      "CHOCOLATES",
+      "DRYFRUITS, NUTS & SEEDS",
+      "SWEETS",
+      "CRISP & NAMKEENS",
+      "DAIRY & BAKERY",
+      "CHEWING GUMS",
+      "TEA & COFFEE",
+      "INSTANTS & MIXES",
+      "BEVERAGES & COLD DRINKS",
+      "CRUSH & SYRUPS",
+      "ICE CREAMS"
+    ]
+  },
+  "screens": [
+    {
+      "viewport": "360x640",
+      "screen": "login",
+      "hash": "#/login",
+      "vw": 360,
+      "vh": 640,
+      "scrollW": 360,
+      "clientW": 360,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "input",
+          "label": "",
+          "w": 266,
+          "h": 48,
+          "x": 47,
+          "y": 254,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "input",
+          "label": "",
+          "w": 266,
+          "h": 48,
+          "x": 47,
+          "y": 339,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.login-submit",
+          "label": "Log in",
+          "w": 266,
+          "h": 54,
+          "x": 47,
+          "y": 405,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "hasSearchInput": false,
+        "inlineStyledEls": 0
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [],
+      "darkModeBodyBg": "rgb(250, 247, 242)"
+    },
+    {
+      "viewport": "360x640",
+      "screen": "home",
+      "hash": "#/",
+      "vw": 360,
+      "vh": 640,
+      "scrollW": 360,
+      "clientW": 360,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.link-btn[data-action=logout]",
+          "label": "Log out",
+          "w": 65.1,
+          "h": 35,
+          "x": 278.9,
+          "y": 14,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 4.34,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CRISP & NAMKEENS158 / 158",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 130,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 226,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CHOCOLATES40 / 102",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 322,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "INSTANTS & MIXES0 / 68",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 418,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CRUSH & SYRUPS0 / 61",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 514,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "BEVERAGES & COLD DRINKS0 / 57",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 610,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "DAIRY & BAKERY0 / 38",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 706,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "ICE CREAMS0 / 19",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 802,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "TEA & COFFEE0 / 12",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 898,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CHEWING GUMS10 / 10",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 994,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "SWEETS0 / 2",
+          "w": 328,
+          "h": 86,
+          "x": 16,
+          "y": 1090,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "label": "Download my list (137 items)",
+          "w": 328,
+          "h": 54,
+          "x": 16,
+          "y": 574,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "tiles": 11,
+        "tileTexts": [
+          "CRISP & NAMKEENS158 / 158",
+          "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "CHOCOLATES40 / 102",
+          "INSTANTS & MIXES0 / 68",
+          "CRUSH & SYRUPS0 / 61",
+          "BEVERAGES & COLD DRINKS0 / 57",
+          "DAIRY & BAKERY0 / 38",
+          "ICE CREAMS0 / 19",
+          "TEA & COFFEE0 / 12",
+          "CHEWING GUMS10 / 10",
+          "SWEETS0 / 2"
+        ],
+        "headerSummary": "209 of 650 decided",
+        "downloadBtn": {
+          "text": "Download my list (137 items)",
+          "disabled": false
+        },
+        "statusChip": "Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 1
+      },
+      "adjacency": [
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRUSH & SYRUPS0 / 61",
+          "b": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "bLabel": "Download my list (137 items)",
+          "gap": 0
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "BEVERAGES & COLD DRINKS0 / 57",
+          "b": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "bLabel": "Download my list (137 items)",
+          "gap": 0
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRISP & NAMKEENS158 / 158",
+          "b": "button.cat-tile",
+          "bLabel": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "b": "button.cat-tile",
+          "bLabel": "CHOCOLATES40 / 102",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CHOCOLATES40 / 102",
+          "b": "button.cat-tile",
+          "bLabel": "INSTANTS & MIXES0 / 68",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "INSTANTS & MIXES0 / 68",
+          "b": "button.cat-tile",
+          "bLabel": "CRUSH & SYRUPS0 / 61",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRUSH & SYRUPS0 / 61",
+          "b": "button.cat-tile",
+          "bLabel": "BEVERAGES & COLD DRINKS0 / 57",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "BEVERAGES & COLD DRINKS0 / 57",
+          "b": "button.cat-tile",
+          "bLabel": "DAIRY & BAKERY0 / 38",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "DAIRY & BAKERY0 / 38",
+          "b": "button.cat-tile",
+          "bLabel": "ICE CREAMS0 / 19",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "ICE CREAMS0 / 19",
+          "b": "button.cat-tile",
+          "bLabel": "TEA & COFFEE0 / 12",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "TEA & COFFEE0 / 12",
+          "b": "button.cat-tile",
+          "bLabel": "CHEWING GUMS10 / 10",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CHEWING GUMS10 / 10",
+          "b": "button.cat-tile",
+          "bLabel": "SWEETS0 / 2",
+          "gap": 10
+        }
+      ],
+      "under44": [
+        {
+          "sel": "button.link-btn[data-action=logout]",
+          "label": "Log out",
+          "w": 65.1,
+          "h": 35
+        }
+      ],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "158 / 158",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "1 / 123",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "40 / 102",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 68",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 61",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 57",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 38",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 19",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 12",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "10 / 10",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 2",
+          "fs": 13,
+          "contrast": 3.64
+        }
+      ],
+      "darkModeBodyBg": "rgb(250, 247, 242)"
+    },
+    {
+      "viewport": "360x640",
+      "screen": "deck-partial",
+      "hash": "#/deck/CHOCOLATES",
+      "vw": 360,
+      "vh": 640,
+      "scrollW": 360,
+      "clientW": 360,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 564,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 124,
+          "h": 60,
+          "x": 82,
+          "y": 564,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 124,
+          "h": 60,
+          "x": 220,
+          "y": 564,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 467,
+          "w": 328
+        },
+        "card": {
+          "h": 467
+        },
+        "imageWrap": {
+          "h": 293.4
+        },
+        "cardBody": {
+          "h": 153
+        },
+        "cardImageSrc": "https://m.media-amazon.com/images/X/bxt1/M/2bxt1BBrfSB19fh._SX400_.jpg",
+        "progressLabel": "40 / 102",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "40 / 102 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 3
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "CHOCOLATES",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹58",
+          "fs": 15,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "CHOCOLATES",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹98",
+          "fs": 15,
+          "contrast": 3.64
+        }
+      ],
+      "darkModeBodyBg": "rgb(250, 247, 242)"
+    },
+    {
+      "viewport": "360x640",
+      "screen": "deck-complete",
+      "hash": "#/deck/CHEWING%20GUMS",
+      "vw": 360,
+      "vh": 640,
+      "scrollW": 360,
+      "clientW": 360,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg",
+          "label": "Back to categories",
+          "w": 280,
+          "h": 54,
+          "x": 40,
+          "y": 382.8,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 564,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 124,
+          "h": 60,
+          "x": 82,
+          "y": 564,
+          "disabled": true,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 124,
+          "h": 60,
+          "x": 220,
+          "y": 564,
+          "disabled": true,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 467,
+          "w": 328
+        },
+        "cardImageSrc": null,
+        "progressLabel": "10 / 10",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "10 / 10 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 1
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        }
+      ],
+      "darkModeBodyBg": "rgb(250, 247, 242)"
+    },
+    {
+      "viewport": "360x640",
+      "screen": "deck-untouched",
+      "hash": "#/deck/SWEETS",
+      "vw": 360,
+      "vh": 640,
+      "scrollW": 360,
+      "clientW": 360,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 564,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 124,
+          "h": 60,
+          "x": 82,
+          "y": 564,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 124,
+          "h": 60,
+          "x": 220,
+          "y": 564,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 467,
+          "w": 328
+        },
+        "card": {
+          "h": 467
+        },
+        "imageWrap": {
+          "h": 314.6
+        },
+        "cardBody": {
+          "h": 131.8
+        },
+        "cardImageSrc": "https://m.media-amazon.com/images/X/bxt1/M/mbxt1x6gFALV$8f._SX400_.jpg",
+        "progressLabel": "0 / 2",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "0 / 2 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 3
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "SWEETS",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹220",
+          "fs": 15,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "SWEETS",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹120",
+          "fs": 15,
+          "contrast": 3.64
+        }
+      ],
+      "darkModeBodyBg": "rgb(250, 247, 242)"
+    },
+    {
+      "viewport": "360x640",
+      "screen": "export",
+      "hash": "#/export",
+      "vw": 360,
+      "vh": 640,
+      "scrollW": 360,
+      "clientW": 360,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 26.9,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.export-build-btn[data-role=build-btn]",
+          "label": "Build & download file",
+          "w": 328,
+          "h": 54,
+          "x": 16,
+          "y": 471.9,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "exportTotal": "137 items to export",
+        "breakdownRows": 4,
+        "listsActualItems": false,
+        "hasSearchInput": false,
+        "inlineStyledEls": 0
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [],
+      "darkModeBodyBg": "rgb(250, 247, 242)"
+    },
+    {
+      "viewport": "360x640",
+      "screen": "admin",
+      "hash": "#/admin",
+      "vw": 360,
+      "vh": 640,
+      "scrollW": 360,
+      "clientW": 360,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 26.9,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "input[data-role=file-input]",
+          "label": "",
+          "w": 294,
+          "h": 22,
+          "x": 33,
+          "y": 584,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg[data-role=upload-btn]",
+          "label": "Upload & replace catalog",
+          "w": 294,
+          "h": 54,
+          "x": 33,
+          "y": 618,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.link-btn[data-action=refresh-progress]",
+          "label": "Refresh",
+          "w": 63.3,
+          "h": 35,
+          "x": 263.7,
+          "y": 756.4,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 4.63,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "adminCards": 3,
+        "progressRows": 4,
+        "fileInputStyled": {
+          "h": 22,
+          "w": 294
+        },
+        "inlineStyleAttrs": 5,
+        "hasSearchInput": false,
+        "inlineStyledEls": 5
+      },
+      "adjacency": [],
+      "under44": [
+        {
+          "sel": "input[data-role=file-input]",
+          "label": "",
+          "w": 294,
+          "h": 22
+        },
+        {
+          "sel": "button.link-btn[data-action=refresh-progress]",
+          "label": "Refresh",
+          "w": 63.3,
+          "h": 35
+        }
+      ],
+      "lowContrastText": [
+        {
+          "sel": "th",
+          "t": "User",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Decided",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Yes",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Progress",
+          "fs": 12,
+          "contrast": 3.64
+        }
+      ],
+      "darkModeBodyBg": "rgb(250, 247, 242)"
+    },
+    {
+      "viewport": "390x844",
+      "screen": "login",
+      "hash": "#/login",
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "clientW": 390,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "input",
+          "label": "",
+          "w": 296,
+          "h": 48,
+          "x": 47,
+          "y": 356,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "input",
+          "label": "",
+          "w": 296,
+          "h": 48,
+          "x": 47,
+          "y": 441,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.login-submit",
+          "label": "Log in",
+          "w": 296,
+          "h": 54,
+          "x": 47,
+          "y": 507,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "hasSearchInput": false,
+        "inlineStyledEls": 0
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": []
+    },
+    {
+      "viewport": "390x844",
+      "screen": "home",
+      "hash": "#/",
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "clientW": 390,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.link-btn[data-action=logout]",
+          "label": "Log out",
+          "w": 65.1,
+          "h": 35,
+          "x": 308.9,
+          "y": 14,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 4.34,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CRISP & NAMKEENS158 / 158",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 130,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 226,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CHOCOLATES40 / 102",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 322,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "INSTANTS & MIXES0 / 68",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 418,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CRUSH & SYRUPS0 / 61",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 514,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "BEVERAGES & COLD DRINKS0 / 57",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 610,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "DAIRY & BAKERY0 / 38",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 706,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "ICE CREAMS0 / 19",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 802,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "TEA & COFFEE0 / 12",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 898,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CHEWING GUMS10 / 10",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 994,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "SWEETS0 / 2",
+          "w": 358,
+          "h": 86,
+          "x": 16,
+          "y": 1090,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "label": "Download my list (137 items)",
+          "w": 358,
+          "h": 54,
+          "x": 16,
+          "y": 778,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "tiles": 11,
+        "tileTexts": [
+          "CRISP & NAMKEENS158 / 158",
+          "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "CHOCOLATES40 / 102",
+          "INSTANTS & MIXES0 / 68",
+          "CRUSH & SYRUPS0 / 61",
+          "BEVERAGES & COLD DRINKS0 / 57",
+          "DAIRY & BAKERY0 / 38",
+          "ICE CREAMS0 / 19",
+          "TEA & COFFEE0 / 12",
+          "CHEWING GUMS10 / 10",
+          "SWEETS0 / 2"
+        ],
+        "headerSummary": "209 of 650 decided",
+        "downloadBtn": {
+          "text": "Download my list (137 items)",
+          "disabled": false
+        },
+        "statusChip": "Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 1
+      },
+      "adjacency": [
+        {
+          "a": "button.cat-tile",
+          "aLabel": "DAIRY & BAKERY0 / 38",
+          "b": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "bLabel": "Download my list (137 items)",
+          "gap": 0
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "ICE CREAMS0 / 19",
+          "b": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "bLabel": "Download my list (137 items)",
+          "gap": 0
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRISP & NAMKEENS158 / 158",
+          "b": "button.cat-tile",
+          "bLabel": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "b": "button.cat-tile",
+          "bLabel": "CHOCOLATES40 / 102",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CHOCOLATES40 / 102",
+          "b": "button.cat-tile",
+          "bLabel": "INSTANTS & MIXES0 / 68",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "INSTANTS & MIXES0 / 68",
+          "b": "button.cat-tile",
+          "bLabel": "CRUSH & SYRUPS0 / 61",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRUSH & SYRUPS0 / 61",
+          "b": "button.cat-tile",
+          "bLabel": "BEVERAGES & COLD DRINKS0 / 57",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "BEVERAGES & COLD DRINKS0 / 57",
+          "b": "button.cat-tile",
+          "bLabel": "DAIRY & BAKERY0 / 38",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "DAIRY & BAKERY0 / 38",
+          "b": "button.cat-tile",
+          "bLabel": "ICE CREAMS0 / 19",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "ICE CREAMS0 / 19",
+          "b": "button.cat-tile",
+          "bLabel": "TEA & COFFEE0 / 12",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "TEA & COFFEE0 / 12",
+          "b": "button.cat-tile",
+          "bLabel": "CHEWING GUMS10 / 10",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CHEWING GUMS10 / 10",
+          "b": "button.cat-tile",
+          "bLabel": "SWEETS0 / 2",
+          "gap": 10
+        }
+      ],
+      "under44": [
+        {
+          "sel": "button.link-btn[data-action=logout]",
+          "label": "Log out",
+          "w": 65.1,
+          "h": 35
+        }
+      ],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "158 / 158",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "1 / 123",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "40 / 102",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 68",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 61",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 57",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 38",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 19",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 12",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "10 / 10",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 2",
+          "fs": 13,
+          "contrast": 3.64
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "screen": "deck-partial",
+      "hash": "#/deck/CHOCOLATES",
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "clientW": 390,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 768,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 139,
+          "h": 60,
+          "x": 82,
+          "y": 768,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 139,
+          "h": 60,
+          "x": 235,
+          "y": 768,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 671,
+          "w": 358
+        },
+        "card": {
+          "h": 671
+        },
+        "imageWrap": {
+          "h": 510.4
+        },
+        "cardBody": {
+          "h": 131.8
+        },
+        "cardImageSrc": "https://m.media-amazon.com/images/X/bxt1/M/2bxt1BBrfSB19fh._SX400_.jpg",
+        "progressLabel": "40 / 102",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "40 / 102 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 3
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "CHOCOLATES",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹58",
+          "fs": 15,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "CHOCOLATES",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹98",
+          "fs": 15,
+          "contrast": 3.64
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "screen": "deck-complete",
+      "hash": "#/deck/CHEWING%20GUMS",
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "clientW": 390,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg",
+          "label": "Back to categories",
+          "w": 310,
+          "h": 54,
+          "x": 40,
+          "y": 382.8,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 768,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 139,
+          "h": 60,
+          "x": 82,
+          "y": 768,
+          "disabled": true,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 139,
+          "h": 60,
+          "x": 235,
+          "y": 768,
+          "disabled": true,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 671,
+          "w": 358
+        },
+        "cardImageSrc": null,
+        "progressLabel": "10 / 10",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "10 / 10 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 1
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "screen": "deck-untouched",
+      "hash": "#/deck/SWEETS",
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "clientW": 390,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 768,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 139,
+          "h": 60,
+          "x": 82,
+          "y": 768,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 139,
+          "h": 60,
+          "x": 235,
+          "y": 768,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 671,
+          "w": 358
+        },
+        "card": {
+          "h": 671
+        },
+        "imageWrap": {
+          "h": 510.4
+        },
+        "cardBody": {
+          "h": 131.8
+        },
+        "cardImageSrc": "https://m.media-amazon.com/images/X/bxt1/M/mbxt1x6gFALV$8f._SX400_.jpg",
+        "progressLabel": "0 / 2",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "0 / 2 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 3
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "SWEETS",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹220",
+          "fs": 15,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "SWEETS",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹120",
+          "fs": 15,
+          "contrast": 3.64
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "screen": "export",
+      "hash": "#/export",
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "clientW": 390,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 26.9,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.export-build-btn[data-role=build-btn]",
+          "label": "Build & download file",
+          "w": 358,
+          "h": 54,
+          "x": 16,
+          "y": 471.9,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "exportTotal": "137 items to export",
+        "breakdownRows": 4,
+        "listsActualItems": false,
+        "hasSearchInput": false,
+        "inlineStyledEls": 0
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": []
+    },
+    {
+      "viewport": "390x844",
+      "screen": "admin",
+      "hash": "#/admin",
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "clientW": 390,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 26.9,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "input[data-role=file-input]",
+          "label": "",
+          "w": 324,
+          "h": 22,
+          "x": 33,
+          "y": 552,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg[data-role=upload-btn]",
+          "label": "Upload & replace catalog",
+          "w": 324,
+          "h": 54,
+          "x": 33,
+          "y": 586,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.link-btn[data-action=refresh-progress]",
+          "label": "Refresh",
+          "w": 63.3,
+          "h": 35,
+          "x": 293.7,
+          "y": 708.4,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 4.63,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "adminCards": 3,
+        "progressRows": 4,
+        "fileInputStyled": {
+          "h": 22,
+          "w": 324
+        },
+        "inlineStyleAttrs": 5,
+        "hasSearchInput": false,
+        "inlineStyledEls": 5
+      },
+      "adjacency": [],
+      "under44": [
+        {
+          "sel": "input[data-role=file-input]",
+          "label": "",
+          "w": 324,
+          "h": 22
+        },
+        {
+          "sel": "button.link-btn[data-action=refresh-progress]",
+          "label": "Refresh",
+          "w": 63.3,
+          "h": 35
+        }
+      ],
+      "lowContrastText": [
+        {
+          "sel": "th",
+          "t": "User",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Decided",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Yes",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Progress",
+          "fs": 12,
+          "contrast": 3.64
+        }
+      ]
+    },
+    {
+      "viewport": "320x568",
+      "screen": "login",
+      "hash": "#/login",
+      "vw": 320,
+      "vh": 568,
+      "scrollW": 320,
+      "clientW": 320,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "input",
+          "label": "",
+          "w": 226,
+          "h": 48,
+          "x": 47,
+          "y": 218,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "input",
+          "label": "",
+          "w": 226,
+          "h": 48,
+          "x": 47,
+          "y": 303,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.login-submit",
+          "label": "Log in",
+          "w": 226,
+          "h": 54,
+          "x": 47,
+          "y": 369,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "hasSearchInput": false,
+        "inlineStyledEls": 0
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": []
+    },
+    {
+      "viewport": "320x568",
+      "screen": "home",
+      "hash": "#/",
+      "vw": 320,
+      "vh": 568,
+      "scrollW": 320,
+      "clientW": 320,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.link-btn[data-action=logout]",
+          "label": "Log out",
+          "w": 65.1,
+          "h": 35,
+          "x": 238.9,
+          "y": 14,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 4.34,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CRISP & NAMKEENS158 / 158",
+          "w": 288,
+          "h": 89,
+          "x": 16,
+          "y": 130,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 229,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CHOCOLATES40 / 102",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 325,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "INSTANTS & MIXES0 / 68",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 421,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CRUSH & SYRUPS0 / 61",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 517,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "BEVERAGES & COLD DRINKS0 / 57",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 613,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "DAIRY & BAKERY0 / 38",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 709,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "ICE CREAMS0 / 19",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 805,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "TEA & COFFEE0 / 12",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 901,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "CHEWING GUMS10 / 10",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 997,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.cat-tile",
+          "label": "SWEETS0 / 2",
+          "w": 288,
+          "h": 86,
+          "x": 16,
+          "y": 1093,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "label": "Download my list (137 items)",
+          "w": 288,
+          "h": 54,
+          "x": 16,
+          "y": 502,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "tiles": 11,
+        "tileTexts": [
+          "CRISP & NAMKEENS158 / 158",
+          "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "CHOCOLATES40 / 102",
+          "INSTANTS & MIXES0 / 68",
+          "CRUSH & SYRUPS0 / 61",
+          "BEVERAGES & COLD DRINKS0 / 57",
+          "DAIRY & BAKERY0 / 38",
+          "ICE CREAMS0 / 19",
+          "TEA & COFFEE0 / 12",
+          "CHEWING GUMS10 / 10",
+          "SWEETS0 / 2"
+        ],
+        "headerSummary": "209 of 650 decided",
+        "downloadBtn": {
+          "text": "Download my list (137 items)",
+          "disabled": false
+        },
+        "statusChip": "Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 1
+      },
+      "adjacency": [
+        {
+          "a": "button.cat-tile",
+          "aLabel": "INSTANTS & MIXES0 / 68",
+          "b": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "bLabel": "Download my list (137 items)",
+          "gap": 0
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRUSH & SYRUPS0 / 61",
+          "b": "button.btn.btn-primary.btn-lg.footer-bar__btn[data-role=download-btn]",
+          "bLabel": "Download my list (137 items)",
+          "gap": 0
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRISP & NAMKEENS158 / 158",
+          "b": "button.cat-tile",
+          "bLabel": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "DRYFRUITS, NUTS & SEEDS1 / 123",
+          "b": "button.cat-tile",
+          "bLabel": "CHOCOLATES40 / 102",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CHOCOLATES40 / 102",
+          "b": "button.cat-tile",
+          "bLabel": "INSTANTS & MIXES0 / 68",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "INSTANTS & MIXES0 / 68",
+          "b": "button.cat-tile",
+          "bLabel": "CRUSH & SYRUPS0 / 61",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CRUSH & SYRUPS0 / 61",
+          "b": "button.cat-tile",
+          "bLabel": "BEVERAGES & COLD DRINKS0 / 57",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "BEVERAGES & COLD DRINKS0 / 57",
+          "b": "button.cat-tile",
+          "bLabel": "DAIRY & BAKERY0 / 38",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "DAIRY & BAKERY0 / 38",
+          "b": "button.cat-tile",
+          "bLabel": "ICE CREAMS0 / 19",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "ICE CREAMS0 / 19",
+          "b": "button.cat-tile",
+          "bLabel": "TEA & COFFEE0 / 12",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "TEA & COFFEE0 / 12",
+          "b": "button.cat-tile",
+          "bLabel": "CHEWING GUMS10 / 10",
+          "gap": 10
+        },
+        {
+          "a": "button.cat-tile",
+          "aLabel": "CHEWING GUMS10 / 10",
+          "b": "button.cat-tile",
+          "bLabel": "SWEETS0 / 2",
+          "gap": 10
+        }
+      ],
+      "under44": [
+        {
+          "sel": "button.link-btn[data-action=logout]",
+          "label": "Log out",
+          "w": 65.1,
+          "h": 35
+        }
+      ],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "158 / 158",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "1 / 123",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "40 / 102",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 68",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 61",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 57",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 38",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 19",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 12",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "10 / 10",
+          "fs": 13,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.cat-tile__count",
+          "t": "0 / 2",
+          "fs": 13,
+          "contrast": 3.64
+        }
+      ]
+    },
+    {
+      "viewport": "320x568",
+      "screen": "deck-partial",
+      "hash": "#/deck/CHOCOLATES",
+      "vw": 320,
+      "vh": 568,
+      "scrollW": 320,
+      "clientW": 320,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 492,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 104,
+          "h": 60,
+          "x": 82,
+          "y": 492,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 104,
+          "h": 60,
+          "x": 200,
+          "y": 492,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 395,
+          "w": 288
+        },
+        "card": {
+          "h": 395
+        },
+        "imageWrap": {
+          "h": 224.3
+        },
+        "cardBody": {
+          "h": 153
+        },
+        "cardImageSrc": "https://m.media-amazon.com/images/X/bxt1/M/2bxt1BBrfSB19fh._SX400_.jpg",
+        "progressLabel": "40 / 102",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "40 / 102 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 3
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "CHOCOLATES",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹58",
+          "fs": 15,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "CHOCOLATES",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹98",
+          "fs": 15,
+          "contrast": 3.64
+        }
+      ]
+    },
+    {
+      "viewport": "320x568",
+      "screen": "deck-complete",
+      "hash": "#/deck/CHEWING%20GUMS",
+      "vw": 320,
+      "vh": 568,
+      "scrollW": 320,
+      "clientW": 320,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg",
+          "label": "Back to categories",
+          "w": 240,
+          "h": 54,
+          "x": 40,
+          "y": 382.8,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 492,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 104,
+          "h": 60,
+          "x": 82,
+          "y": 492,
+          "disabled": true,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 104,
+          "h": 60,
+          "x": 200,
+          "y": 492,
+          "disabled": true,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 395,
+          "w": 288
+        },
+        "cardImageSrc": null,
+        "progressLabel": "10 / 10",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "10 / 10 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 1
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        }
+      ]
+    },
+    {
+      "viewport": "320x568",
+      "screen": "deck-untouched",
+      "hash": "#/deck/SWEETS",
+      "vw": 320,
+      "vh": 568,
+      "scrollW": 320,
+      "clientW": 320,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back to categories",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 8,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn-undo[data-action=undo]",
+          "label": "Undo",
+          "w": 52,
+          "h": 60,
+          "x": 16,
+          "y": 492,
+          "disabled": true,
+          "fs": 13,
+          "contrast": 7,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--no[data-action=no]",
+          "label": "Don't stock",
+          "w": 104,
+          "h": 60,
+          "x": 82,
+          "y": 492,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.5,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn-decide.btn-decide--yes[data-action=yes]",
+          "label": "Stock it",
+          "w": 104,
+          "h": 60,
+          "x": 200,
+          "y": 492,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 4.09,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "cardStack": {
+          "h": 395,
+          "w": 288
+        },
+        "card": {
+          "h": 395
+        },
+        "imageWrap": {
+          "h": 245.5
+        },
+        "cardBody": {
+          "h": 131.8
+        },
+        "cardImageSrc": "https://m.media-amazon.com/images/X/bxt1/M/mbxt1x6gFALV$8f._SX400_.jpg",
+        "progressLabel": "0 / 2",
+        "categoryNameVisibleInTopbar": true,
+        "deckTopbarText": "0 / 2 Saved",
+        "hasSearchInput": false,
+        "inlineStyledEls": 3
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": [
+        {
+          "sel": "span.status-chip[data-role=status-chip]",
+          "t": "Saved",
+          "fs": 12,
+          "contrast": 3.41
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "SWEETS",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹220",
+          "fs": 15,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__chip",
+          "t": "SWEETS",
+          "fs": 11,
+          "contrast": 3.64
+        },
+        {
+          "sel": "span.card__price-mrp",
+          "t": "₹120",
+          "fs": 15,
+          "contrast": 3.64
+        }
+      ]
+    },
+    {
+      "viewport": "320x568",
+      "screen": "export",
+      "hash": "#/export",
+      "vw": 320,
+      "vh": 568,
+      "scrollW": 320,
+      "clientW": 320,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 48.4,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg.export-build-btn[data-role=build-btn]",
+          "label": "Build & download file",
+          "w": 288,
+          "h": 54,
+          "x": 16,
+          "y": 514.9,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "exportTotal": "137 items to export",
+        "breakdownRows": 4,
+        "listsActualItems": false,
+        "hasSearchInput": false,
+        "inlineStyledEls": 0
+      },
+      "adjacency": [],
+      "under44": [],
+      "lowContrastText": []
+    },
+    {
+      "viewport": "320x568",
+      "screen": "admin",
+      "hash": "#/admin",
+      "vw": 320,
+      "vh": 568,
+      "scrollW": 320,
+      "clientW": 320,
+      "overflowX": false,
+      "bodyBg": "rgb(250, 247, 242)",
+      "bodyColor": "rgb(28, 26, 23)",
+      "controls": [
+        {
+          "sel": "button.icon-btn[data-action=back]",
+          "label": "Back",
+          "w": 48,
+          "h": 48,
+          "x": 10,
+          "y": 26.9,
+          "disabled": false,
+          "fs": 16,
+          "contrast": 6.55,
+          "hasFocusStyle": null,
+          "inThumbReach": false
+        },
+        {
+          "sel": "input[data-role=file-input]",
+          "label": "",
+          "w": 254,
+          "h": 22,
+          "x": 33,
+          "y": 603.5,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.btn.btn-primary.btn-lg[data-role=upload-btn]",
+          "label": "Upload & replace catalog",
+          "w": 254,
+          "h": 54,
+          "x": 33,
+          "y": 637.5,
+          "disabled": false,
+          "fs": 17,
+          "contrast": 17.36,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        },
+        {
+          "sel": "button.link-btn[data-action=refresh-progress]",
+          "label": "Refresh",
+          "w": 63.3,
+          "h": 35,
+          "x": 223.7,
+          "y": 775.9,
+          "disabled": false,
+          "fs": 14,
+          "contrast": 4.63,
+          "hasFocusStyle": null,
+          "inThumbReach": true
+        }
+      ],
+      "notes": {
+        "adminCards": 3,
+        "progressRows": 4,
+        "fileInputStyled": {
+          "h": 22,
+          "w": 254
+        },
+        "inlineStyleAttrs": 5,
+        "hasSearchInput": false,
+        "inlineStyledEls": 5
+      },
+      "adjacency": [],
+      "under44": [
+        {
+          "sel": "input[data-role=file-input]",
+          "label": "",
+          "w": 254,
+          "h": 22
+        },
+        {
+          "sel": "button.link-btn[data-action=refresh-progress]",
+          "label": "Refresh",
+          "w": 63.3,
+          "h": 35
+        }
+      ],
+      "lowContrastText": [
+        {
+          "sel": "th",
+          "t": "User",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Decided",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Yes",
+          "fs": 12,
+          "contrast": 3.64
+        },
+        {
+          "sel": "th",
+          "t": "Progress",
+          "fs": 12,
+          "contrast": 3.64
+        }
+      ]
+    }
+  ]
+}

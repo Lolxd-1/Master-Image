@@ -1,7 +1,11 @@
 # Stock Picker — Build Specification & Definition of Done
 
-**Status:** frozen contract. Implementation and subagents build against this document.
+**Status:** frozen contract as amended for production v2 (see amendment note below). Implementation and subagents build against this document.
 **Last verified against:** `Master excel.xlsx` (650 rows), 2026-09-09.
+
+> **Amendment 2026-09-10 (production v2, owner-directed):** the §3 ban on product-data editing is
+> withdrawn. Editable fields are D (name), E (MRP), F (selling price) and K (Size) only — see §6.1
+> and §8. All other non-goals in §3 stand.
 
 ---
 
@@ -44,7 +48,6 @@ then redeploy.
 Explicitly out of scope. Building these is scope creep and will be rejected in review.
 
 - No signup, password reset, email, or OAuth.
-- No editing of product data. **Yes/no only** — no price, name, or image edits. (Confirmed with user.)
 - No store column, no per-store catalogs. All 4 users see the identical catalog; separation is by
   *who is logged in*, not by data. (Confirmed with user.)
 - No deduplication logic. The uploaded sheet is pre-deduplicated. (Confirmed with user.)
@@ -72,7 +75,7 @@ Column layout of `bulk_upload_template` (row 1 = header, data starts row 2):
 
 | Col | Field | Populated in sample | Notes |
 |---|---|---|---|
-| A | SKU ID | 650/650, **all unique** | **Primary key.** Never edited. |
+| A | SKU ID | 650/650, **all unique** | **Primary key.** Never edited. May be blank on every row in other catalogs — SmartBiz assigns it only on upload — in which case a synthetic SKU is derived instead; see §6. |
 | B | Variant ID | 0/650 | Empty, stays empty |
 | C | Custom SKU | 0/650 | Empty |
 | D | Product Name | 650/650 | Display title |
@@ -217,6 +220,19 @@ master is one store (650 rows), the combined sheet is ~3000, and price correctio
 disappear from a later sheet simply stop being shown; their stale decisions are inert because the
 export walks the *current* catalog's products, never the decisions map.
 
+**Synthetic SKUs, when column A is blank.** SmartBiz assigns the real SKU ID only when a sheet is
+uploaded *to it*, so a master sheet assembled before that point (e.g. `QuickVerse_Master_Catalog.xlsx`)
+legitimately has column A blank on every row. `parseWorkbook` (`web/src/xlsx.js`) does not reject
+such a row: when column A is empty it derives a synthetic SKU from the row's own content — an
+FNV-1a 64-bit hash of `name + product category + business category + MRP + image URL`, rendered
+as `qv-<16 lowercase hex chars>` (e.g. `qv-6e65a79f1fc77d1e`), with a `-2`, `-3`, … suffix appended
+if two rows ever hash identically. Hashing content rather than row position is deliberate: the
+same sheet re-uploaded produces the same IDs, so decisions and overrides (both keyed by SKU) are
+not lost. The synthetic ID is internal only — it is never written to column A on export, so the
+exported row's column A stays exactly as blank as the source — and it is used only in the absence
+of a real one: a row that does carry a column-A value keeps using it verbatim and is still
+rejected as a duplicate if that value repeats (§4.1).
+
 KV keys, per catalog id:
 
 | Key | Contents | Approx size |
@@ -225,11 +241,39 @@ KV keys, per catalog id:
 | `cat:{id}:rows` | JSON map `sku → original <row> XML` — fetched only at export | ~500 KB gz |
 | `cat:{id}:skeleton` | The workbook with all data rows stripped | ~200 KB |
 
+### 6.1 Per-user overrides (production v2 — editable catalog data)
+
+Editable columns are **D (name), K (Size), E (MRP), F (selling price)** only. Never editable:
+A/B (identity), G/H/J (dropdown-bound to `DataSheet` named ranges), N (dropdown), P–U
+(images), or any other column.
+
+```sql
+-- Per-user, per-field corrections. Absent = use the catalog value.
+-- Keyed by (username, sku) like `decision`: corrections survive a catalog re-upload.
+CREATE TABLE override (
+  username   TEXT    NOT NULL,
+  sku        TEXT    NOT NULL,
+  field      TEXT    NOT NULL,   -- 'name' | 'size' | 'mrp' | 'price'
+  value      TEXT    NOT NULL,   -- always stored as text; numbers parsed at use
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (username, sku, field)
+);
+CREATE INDEX idx_override_user ON override (username);
+```
+
+One row per field (not a JSON blob per SKU): "reset this one field" is a `DELETE`, no
+read-modify-write in the Worker, every statement a trivial indexed op inside the 10 ms budget.
+Same isolation as decisions — two shopkeepers editing the same SKU never see each other.
+
+Validation (enforced client-side live and server-side on write):
+D 1–200 chars, K 0–50 chars, E `> 0`, `<= 999999.99`, max 2 decimals,
+F `>= 0`, max 2 decimals, **`F <= E` (after overrides)** — an export can never contain F > E.
+
 Product display record (kept deliberately small — this is on the mobile critical path):
 
 ```ts
 type Product = {
-  s: string;   // SKU ID  (col A)
+  s: string;   // SKU ID  (col A, or a synthetic id when col A is blank — see §6)
   n: string;   // name    (col D)
   m: number;   // MRP     (col E)
   p: number;   // selling price (col F)
@@ -260,9 +304,11 @@ All responses JSON. Auth via `HttpOnly; Secure; SameSite=Lax` cookie holding
 | `PUT` | `/api/catalog/:id/rows` | **admin** | raw JSON text | `{ok:true}` |
 | `PUT` | `/api/catalog/:id/skeleton` | **admin** | raw base64 text | `{ok:true}` |
 | `POST` | `/api/catalog/:id/activate` | **admin** | — | `{id, productCount}` |
-| `GET` | `/api/decisions` | user | — | `{sku: 0|1}` for the caller only |
-| `POST` | `/api/decisions` | user | `{items:[{sku, value}]}` (≤500) | `{saved: n}` |
-| `GET` | `/api/progress` | **admin** | — | per-user `{decided, yes, total}` |
+| `GET` | `/api/decisions` | user | — | `{sku: 0\|1}` for the caller only; `?user=<u>` admin-only for that user |
+| `POST` | `/api/decisions` | user | `{items:[{sku, value}]}` `value: 0\|1\|null` (`null` = DELETE/undecided, ≤500) | `{saved: n}` |
+| `GET` | `/api/overrides` | user | — | `{[sku]: {name?, size?, mrp?, price?}}` caller only; `?user=<u>` admin-only |
+| `POST` | `/api/overrides` | user | `{items:[{sku, field, value}]}` `value: string\|null` (`null` = reset, ≤500) | `{saved: n}` |
+| `GET` | `/api/progress` | **admin** | — | per-user `{decided, yes, total, lastActive}` |
 
 **Why upload is five requests and not one.** Measured on a 3250-row combined catalog, the `rows`
 map is **3.9 MB** of JSON. `await request.json()` on that costs roughly 20–50 ms of CPU against a
@@ -274,8 +320,9 @@ zero regardless of catalog size.
 The catalog only becomes visible at `activate`, so a half-finished or failed upload cannot be
 served to pickers and leaves the previous catalog untouched.
 
-**Idempotency:** `POST /api/decisions` is an upsert keyed on `(catalog_id, username, sku)`.
-Replaying a batch is safe — this is what makes the offline outbox correct.
+**Idempotency:** `POST /api/decisions` is an upsert keyed on `(username, sku)` (`null` deletes).
+Replaying a batch is safe — this is what makes the offline outbox correct. Same for
+`POST /api/overrides` keyed on `(username, sku, field)`.
 
 ---
 
@@ -288,19 +335,26 @@ This is where correctness is won or lost. Specified precisely.
 2. Read `xl/worksheets/sheet2.xml`. Split `sheetData` into individual `<row>` elements.
 3. Row 1 is the header — keep it in the skeleton.
 4. For each data row: extract cell values (resolving `sharedStrings.xml` indices) to build the
-   `Product` record, **and keep the row's raw XML string verbatim**, keyed by SKU.
+   `Product` record, **and keep the row's raw XML string verbatim**, keyed by SKU (synthetic per
+   §6 when column A is blank).
 5. Build the skeleton: the original zip with **every part byte-identical**, except
    `sheet2.xml`, whose `sheetData` contains only the header row. `dimension`, `table1.xml`,
    validations, protection, conditional formatting, `sharedStrings.xml` — all untouched.
 6. Upload products + rows + skeleton.
 
 **At export (browser):**
-1. Fetch skeleton, rows, and the user's decisions.
+1. Fetch skeleton, rows, the user's decisions **and the user's overrides**.
 2. Select SKUs where `value === 1`, **in original sheet order** (stable, reproducible output).
-3. Renumber each kept row: `<row r="N"` and each `<c r="XN"` → sequential from 2. Nothing else in
-   the row is modified — values, styles, and shared-string indices are carried across verbatim.
+3. Per kept row: **apply overrides first** via `applyOverrides(rowXml, ov)` (text D/K → `t="inlineStr"`
+   preserving `r`/`s` + `xml:space="preserve"`; numeric E/F → `<v>` body only, `t="n"` kept;
+   untouched rows pass through byte-identical), **then `renumberRow`**.
 4. Splice the renumbered rows into the skeleton's `sheetData`.
 5. Re-zip and download as `<original-name>-<username>-<yyyymmdd>.xlsx`.
+
+**Invariant that survives overrides:** every part except the data sheet stays byte-identical
+(`sharedStrings.xml` in particular is never appended to), and every cell the user did not edit
+stays byte-identical. An override for an unselected or vanished SKU is inert — the export walks
+the current catalog's product list, never the overrides map.
 
 **Why this is lossless:** kept rows are never re-encoded. They still point at the original
 `sharedStrings.xml`, which ships unchanged, so every string resolves to exactly the same text.
@@ -315,37 +369,54 @@ the fidelity tests; prefer omitting if both pass.
 
 ## 9. Frontend specification
 
-Four screens. Mobile-first, single column, thumb-reachable controls. Target: a low-end Android
+Six screens + one sheet. Mobile-first, single column, thumb-reachable controls. Target: a low-end Android
 phone on a slow connection.
 
 ### 9.1 Login
-Username, password, one button. Remembers the session for 90 days. No other chrome.
+Username, password, one button + show-password toggle and a support hint. Remembers the session for 90 days.
 
 ### 9.2 Category grid (home)
-- One tile per **Product Category** (col H), sorted by item count descending.
-- Each tile: representative product thumbnail (`._SX200_`), category name, `done / total`, and a
-  progress ring.
-- Header: overall progress bar, `N of M decided`.
-- Footer, always visible: **`Download my list (N items)`** — enabled whenever N ≥ 1.
-- If more than one Business Category ever appears, group the tiles under business-category headings.
-  With one, render a flat grid (today's case).
+- One tile per **Product Category** (col H), unfinished-first (largest first), finished last.
+- Each tile: thumbnail, name, `✓ N stocked · ✗ N no · N left` + progress ring; finished = unmistakable check.
+- Header: `You stock N items` (primary), `X of 650 checked · Y not stocked` (secondary), progress bar + %.
+- Primary CTA: Start / Continue (`Continue — <Cat>, item N of M`, persisted in localStorage) / Download when done.
+- Always-visible search (`Search 650 products`, name+SKU, debounced) rendering product rows.
+- Footer `Download my list (N)` only once N ≥ 1; overflow `⋯` menu holds Admin + Log out (with confirm).
 
 ### 9.3 Swipe deck
-- Full-bleed product image (`._SX400_`), name, MRP + selling price, category chip.
-- Two large buttons: **✗ Don't stock** / **✓ Stock it**. Drag left/right also works, with the card
-  tilting and a colour tint tracking the gesture.
-- **Undo** — mandatory. Mis-swipes are constant and unrecoverable mistakes destroy trust.
-- Progress `12 / 158` and a thin bar.
-- **Prefetch the next 3 images** so a card is never blank.
-- Ignore input while a card is animating out — prevents double-decisions.
-- Resume exactly where the user left off within each category.
-- Desktop: `←` / `→` / `U` for undo (the admin will test on a laptop).
-- Missing image → clean text card, never a broken-image icon.
+- Top bar: back, **category name**, `N / M`, bar, sync chip. Mode toggle Swipe | List (persisted).
+- Full-bleed image, name, chip, **Edited badge**. Selling price and pack size are **direct
+  controls on the card itself** (`createStepper`, `web/src/stepper.ts`), not a separate edit
+  step: `[ − ] value [ + ]`, tap to step by one, press-and-hold to accelerate, or drag the value
+  left/right to scrub; tap the value once to type it exactly. Selling price is capped at MRP
+  (the `+` stops there). Pack size is pre-seeded from a size parsed out of the product name
+  (`packSizeFromName`, `web/src/units.ts`) when there is no override yet, with a unit pill
+  cycling `g / kg / ml / L / pc` — changing the unit relabels the number, it never rescales it.
+  A **⋯** button opens the edit sheet (§9.3d) for the rarer fields.
+- Two labelled buttons **✗ Don't stock / ✓ Stock it** + YES/NO drag stamp (CSS `data-dir` tint, not inline).
+- Promote peek card (no re-mount); durable Undo + toast; completion panel with **Next category →**.
+- Keyboard `←`/`→`/`U` + hint on fine pointers; `touch-action` scroll guard.
+
+### 9.3b List mode (same route) + 9.3c Review (`#/review[/<cat>]`)
+- ≥64px rows: thumb, name (2-line clamp), price (edited shown, original struck), Edited badge, 3-state toggle.
+- List header: Select all / Clear all behind count-stating confirms, undoable via toast; filter All/Stocked/Not/Left.
+- Review: three tabs Stocked (N) / Not stocked (N) / Left (N), same row component, one-tap flip.
+
+### 9.3d Edit sheet (bottom sheet, opened via the card's **⋯**)
+- Fields Name (inline text, 200-char max) / Selling price / MRP / Pack size. Selling price, MRP
+  and Pack size are the same **steppers** as §9.3, not typed text fields; selling price's range
+  is live-clamped to the current MRP stepper's value, so price > MRP is structurally impossible
+  here rather than a validation message. Rebuilt to fit one screen at 360×640 with no scrolling.
+- Per field: an "Original: …" line + a 44px ↺ reset appear only once that field differs from the
+  catalog value; a destructive **Reset all**, behind `confirmDialog`, clears every override for
+  the product. SKU shown, tap to copy; dirty-close confirm; **Save** writes changed fields through
+  `store.setOverride` (same offline-safe outbox as decisions).
 
 ### 9.4 Export
-- Summary: total yes, breakdown by category.
-- One button → builds and downloads the file locally, with a progress state while zipping.
-- Plain instruction line: upload this file to SmartBiz without opening it.
+- `N items ready`, per-category breakdown, **full item list** (removable → undecided, Edited badges, edited count).
+- Primary `Make my file` (keep building state + `yieldToPaint`); success state with filename/count +
+  **Share** (`navigator.share` files, fallback download) + Save to phone; instruction
+  `Send this file as it is. Do not open it first.`; rebuild on every build (never stale).
 
 ### 9.5 Persistence behaviour (non-negotiable)
 - Every decision writes to `localStorage` **immediately and synchronously** — the UI never waits
@@ -380,6 +451,31 @@ A test that was not run does not count. Every item records evidence.
 | T-1.10 | **Numeric types preserved** | MRP/price remain numeric cells (`t="n"`), never text — Amazon rejects text prices |
 | T-1.11 | **Unicode/special chars** | `LAY'S`, `&`, `,` in names survive exactly; XML stays well-formed |
 | T-1.12 | Table range consistency | `table1.xml` `ref` and `<dimension>` agree with the emitted row count |
+| T-1.13 | Override a price | Exported F is `t="n"` with the new value; E untouched |
+| T-1.14 | Override a name | `t="inlineStr"` well-formed; openpyxl reads back exact string; `sharedStrings.xml` byte-identical |
+| T-1.15 | Fill an empty Size (K) | Value present; cell `s` unchanged |
+| T-1.16 | Rows with no override | Byte-identical to master (ignoring row number) in a mixed export |
+| T-1.17 | Every other part | Still hash-identical with overrides applied |
+| T-1.18 | Special chars in override | `& < ' "`, Devanagari, emoji survive; XML parses |
+| T-1.19 | Self-closing cell override | `<c r="C2" s="2"/>` → valid populated cell, style preserved |
+| T-1.20 | Opens clean with overrides | openpyxl no warnings; no repair prompt; G/H/N dropdowns work |
+| T-1.21 | `price <= MRP` invariant | Export can never contain F > E |
+| T-1.22 | Decimal formatting | `12`, `12.5`, `1234.75` round-trip numeric; no exponent/trailing dot |
+
+### T-QV Synthetic-SKU catalog — `npm run verify:catalog`
+
+Exercises §6's synthetic-SKU rule against a real column-A-blank catalog
+(`QuickVerse_Master_Catalog.xlsx`), separately from the T-1 suite above which uses a catalog
+that already has real SKUs.
+
+| # | Test | Pass criterion |
+|---|---|---|
+| T-QV.1 | Parse the whole catalog | Parses without throwing; every row becomes a product |
+| T-QV.2 | Every SKU is non-empty, unique, and `qv-`-prefixed | No blank or duplicate SKUs reach the app |
+| T-QV.3 | Parse the same file twice | Identical SKU list both times (stability across re-uploads) |
+| T-QV.4 | Byte-level export sanity | Column A stays blank in the export; row XML is verbatim aside from the row number |
+| T-QV.5 | Override export | Price/size overrides land on the right row by synthetic SKU; every other row is untouched |
+| T-QV.6 | MRP/price sanity (report only) | Counts rows where price > MRP; never fails the suite, just reports |
 
 ### T-2 API & data
 
@@ -389,7 +485,10 @@ A test that was not run does not count. Every item records evidence.
 | T-2.2 | Every endpoint without a cookie | 401, no data leaked |
 | T-2.3 | Picker calls admin endpoints | 403 |
 | T-2.4 | **User isolation** | User A's decisions never appear for user B. Verified with 2 sessions and overlapping SKUs |
+| T-2.4b | **Override isolation** | User A's overrides never appear for user B; admin `?user=` reads either, picker `?user=` 403 |
 | T-2.5 | Decision upsert | Same SKU posted twice with different values → last write wins, one row |
+| T-2.5b | Decision undecide | `value: null` deletes the row; reload confirms absence; replay safe |
+| T-2.5c | Override set/reset | set → readable; `null` resets; bad field/value 400; >500 rejected |
 | T-2.6 | Replay a batch | Idempotent, no duplicates, no error |
 | T-2.7 | Oversized batch (>500) | Rejected with 400, not a crash |
 | T-2.8 | Cookie tampering | Modified HMAC → 401 |

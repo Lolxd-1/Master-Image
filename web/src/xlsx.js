@@ -186,6 +186,91 @@ function findSheetPath(parts) {
 
 export class UploadError extends Error {}
 
+/* ------------------------------------------------------------------ synthetic SKUs */
+
+/**
+ * Some catalogs (a freshly assembled master sheet, in particular) arrive with column A blank
+ * on every row — SmartBiz assigns the real SKU ID only when the file is actually uploaded, so
+ * the "Not to be Edited" header just means "not assigned yet". But the app needs a stable key
+ * per row from the moment it is parsed: every yes/no choice and every price/name/size fix a
+ * shopkeeper makes is stored keyed by SKU, and that work has to survive re-uploading the same
+ * catalog next week rather than evaporating because the SKU column is empty. So when a row has
+ * no SKU we derive one from the row's own content (name, categories, MRP, image) instead of its
+ * position in the sheet — content is stable even if rows get reordered upstream, a row index is
+ * not. The derived id lives only inside the app: it is never written into column A, and because
+ * buildWorkbook re-emits row XML verbatim the exported file stays exactly as blank there as the
+ * source was, so SmartBiz still assigns its own SKU on the real upload.
+ */
+
+/** Multiply two uint32 values, returning the full 64-bit product as {hi, lo} uint32 halves. */
+function mul32(a, b) {
+  const aLo = a & 0xffff, aHi = a >>> 16;
+  const bLo = b & 0xffff, bHi = b >>> 16;
+  const lo0 = aLo * bLo;
+  const mid = aHi * bLo + aLo * bHi;
+  const loFull = lo0 + (mid & 0xffff) * 0x10000;
+  const carry = Math.floor(loFull / 0x100000000);
+  const hi = (aHi * bHi + Math.floor(mid / 0x10000) + carry) >>> 0;
+  return { hi, lo: loFull >>> 0 };
+}
+
+/** 64-bit multiply of (aHi,aLo) * (bHi,bLo) mod 2^64, via the standard hi/lo split (no BigInt). */
+function mul64(aHi, aLo, bHi, bLo) {
+  const ll = mul32(aLo, bLo);
+  const hl = mul32(aHi, bLo);
+  const lh = mul32(aLo, bHi);
+  const hi = (ll.hi + hl.lo + lh.lo) >>> 0;
+  return { hi, lo: ll.lo };
+}
+
+const FNV_OFFSET_HI = 0xcbf29ce4, FNV_OFFSET_LO = 0x84222325;
+const FNV_PRIME_HI = 0x00000100, FNV_PRIME_LO = 0x000001b3;
+
+/**
+ * FNV-1a 64-bit over the UTF-8 bytes of `str`, returned as 16 lowercase hex chars. Pure integer
+ * ops so it is byte-identical between Node and the browser, and stable across runs — the whole
+ * point of using it as a SKU source.
+ * @param {string} str
+ */
+function fnv1a64Hex(str) {
+  let hi = FNV_OFFSET_HI, lo = FNV_OFFSET_LO;
+  const bytes = new TextEncoder().encode(str);
+  for (let i = 0; i < bytes.length; i++) {
+    lo = (lo ^ bytes[i]) >>> 0;
+    const prod = mul64(hi, lo, FNV_PRIME_HI, FNV_PRIME_LO);
+    hi = prod.hi;
+    lo = prod.lo;
+  }
+  const hex = (n) => n.toString(16).padStart(8, '0');
+  return hex(hi) + hex(lo);
+}
+
+/**
+ * Derive a stable synthetic SKU for a row with no column-A value, from row content rather than
+ * position. `seen` is the same de-dup set parseWorkbook already tracks real SKUs in, so a
+ * collision (two rows with identical name/categories/MRP/image) gets `-2`, `-3`, ... appended.
+ * @param {Record<string, string|number>} cells
+ * @param {string} name  already-trimmed column D value
+ * @param {Set<string>} seen
+ */
+function syntheticSku(cells, name, seen) {
+  const canon = [
+    name,
+    String(cells[COL.PROD_CAT] ?? '').trim(),
+    String(cells[COL.BIZ_CAT] ?? '').trim(),
+    String(cells[COL.MRP] ?? ''),
+    String(cells[COL.IMAGE] ?? '').trim(),
+  ].join(' ');
+  const hash = fnv1a64Hex(canon);
+  let candidate = `qv-${hash}`;
+  let suffix = 2;
+  while (seen.has(candidate)) {
+    candidate = `qv-${hash}-${suffix}`;
+    suffix++;
+  }
+  return candidate;
+}
+
 /* ------------------------------------------------------------------ parse */
 
 /**
@@ -247,21 +332,20 @@ export function parseWorkbook(bytes) {
     const name = String(cells[COL.NAME] ?? '').trim();
     if (!sku && !name) { emptyRowCount++; continue; } // padding row
 
-    if (!sku) {
-      throw new UploadError(
-        `Row ${r + 1} has a product name ("${name}") but no SKU ID in column A. ` +
-        `Every product needs its SKU ID — that is how the app tracks your choices.`
-      );
+    let rowSku = sku;
+    if (rowSku) {
+      if (seen.has(rowSku)) {
+        throw new UploadError(
+          `SKU ID "${rowSku}" appears more than once (row ${r + 1}). SKU IDs must be unique.`
+        );
+      }
+    } else {
+      rowSku = syntheticSku(cells, name, seen);
     }
-    if (seen.has(sku)) {
-      throw new UploadError(
-        `SKU ID "${sku}" appears more than once (row ${r + 1}). SKU IDs must be unique.`
-      );
-    }
-    seen.add(sku);
+    seen.add(rowSku);
 
     products.push({
-      s: sku,
+      s: rowSku,
       n: name,
       m: Number(cells[COL.MRP] ?? 0),
       p: Number(cells[COL.PRICE] ?? cells[COL.MRP] ?? 0),
@@ -269,7 +353,7 @@ export function parseWorkbook(bytes) {
       b: String(cells[COL.BIZ_CAT] ?? '').trim(),
       i: String(cells[COL.IMAGE] ?? '').trim(),
     });
-    rows[sku] = rowXml;
+    rows[rowSku] = rowXml;
   }
 
   if (products.length === 0) {
@@ -303,15 +387,150 @@ function renumberRow(rowXml, n) {
     .replace(/(<c\s+[^>]*?\br="[A-Z]+)\d+"/g, `$1${n}"`);
 }
 
+/* ------------------------------------------------------------------ overrides (SPEC §6.1, §8) */
+
+const OV_COL = { name: 'D', size: 'K', mrp: 'E', price: 'F' };
+const COL_ORDER = 'ABCDEFGHIJKLMNOPQRSTUVWXY'.split('');
+
+/** Escape for inline-string XML: & first, then < >, strip XML-1.0-illegal controls. */
+function escapeInline(s) {
+  const stripped = String(s).replace(/[ --]/g, '');
+  return stripped.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Bare decimal: 12, 12.5, 1234.75 — never exponent, currency, separators or trailing dot. */
+function formatDecimal(v) {
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!Number.isFinite(n)) throw new Error(`Invalid number: ${JSON.stringify(v)}`);
+  const rounded = Math.round(n * 100) / 100;
+  let s = String(rounded);
+  if (/[eE]/.test(s)) s = rounded.toFixed(2).replace(/\.?0+$/, '');
+  return s;
+}
+
+function cellOpenAttrs(rowXml, col) {
+  const m = new RegExp(`<c\\s+[^>]*?\\br="${col}\\d+"[^>]*?>`).exec(rowXml);
+  return m ? m[0] : null;
+}
+
+function styleOf(openTag) {
+  const m = /\bs="([^"]*)"/.exec(openTag || '');
+  return m ? m[1] : null;
+}
+
+function rowNumberOf(rowXml) {
+  const m = /<row\s+[^>]*?\br="(\d+)"/.exec(rowXml);
+  return m ? m[1] : '2';
+}
+
+/**
+ * Set one cell in a row, preserving column order. `makeCell(r, s)` returns the full `<c>` element.
+ * @param {string} rowXml
+ * @param {string} col
+ * @param {(r: string, s: string | null) => string} makeCell
+ */
+function setCell(rowXml, col, makeCell) {
+  const rNum = rowNumberOf(rowXml);
+  const r = `${col}${rNum}`;
+  const openRe = new RegExp(`<c\\s+[^>]*?\\br="${col}\\d+"[^>]*?(?:/>|>)`);
+  const m = openRe.exec(rowXml);
+  if (!m) {
+    // Cell absent: insert in column order so Excel never sees out-of-order cells.
+    const s = '2';
+    const cell = makeCell(r, s);
+    const cells = [];
+    const cellRe = /<c\s+[^>]*?\br="([A-Z]+)\d+"[^>]*?(?:\/>|>.*?<\/c>)/g;
+    let match;
+    let insertAt = rowXml.length;
+    let found = false;
+    const want = COL_ORDER.indexOf(col);
+    while ((match = cellRe.exec(rowXml)) !== null) {
+      cells.push(match);
+      if (!found && COL_ORDER.indexOf(match[1]) > want) {
+        insertAt = match.index;
+        found = true;
+      }
+    }
+    if (!found) {
+      // Append just before </row>, or before trailing whitespace.
+      const closeAt = rowXml.lastIndexOf('</row>');
+      insertAt = closeAt === -1 ? rowXml.length : closeAt;
+    }
+    return rowXml.slice(0, insertAt) + cell + rowXml.slice(insertAt);
+  }
+  const openTag = m[0];
+  const s = styleOf(openTag);
+  if (openTag.endsWith('/>')) {
+    return rowXml.slice(0, m.index) + makeCell(r, s) + rowXml.slice(m.index + openTag.length);
+  }
+  const closeAt = rowXml.indexOf('</c>', m.index);
+  const full = rowXml.slice(m.index, closeAt + 4);
+  void full;
+  return rowXml.slice(0, m.index) + makeCell(r, s) + rowXml.slice(closeAt + 4);
+}
+
+function numericInRow(rowXml, col) {
+  const m = new RegExp(`<c\\s+[^>]*?\\br="${col}\\d+"[^>]*?>(.*?)</c>`).exec(rowXml);
+  if (!m) return null;
+  const v = /<v>(.*?)<\/v>/.exec(m[1]);
+  return v ? Number(v[1]) : null;
+}
+
+/**
+ * Apply per-field overrides to one row's XML (SPEC §8). Text D/K become `t="inlineStr"`
+ * (sharedStrings.xml is never touched); numeric E/F replace only the `<v>` body, keeping
+ * `t="n"` and the `s` style byte-for-byte. Rows with no override pass through untouched.
+ *
+ * @param {string} rowXml
+ * @param {{name?:string,size?:string,mrp?:string,price?:string}} ov
+ * @returns {string}
+ */
+export function applyOverrides(rowXml, ov) {
+  if (!ov || (ov.name === undefined && ov.size === undefined && ov.mrp === undefined && ov.price === undefined)) {
+    return rowXml;
+  }
+  let out = rowXml;
+  if (ov.name !== undefined) {
+    const text = escapeInline(ov.name);
+    out = setCell(out, OV_COL.name, (r, s) =>
+      `<c r="${r}"${s !== null ? ` s="${s}"` : ''} t="inlineStr"><is><t xml:space="preserve">${text}</t></is></c>`);
+  }
+  if (ov.size !== undefined) {
+    const text = escapeInline(ov.size);
+    out = setCell(out, OV_COL.size, (r, s) =>
+      `<c r="${r}"${s !== null ? ` s="${s}"` : ''} t="inlineStr"><is><t xml:space="preserve">${text}</t></is></c>`);
+  }
+  if (ov.mrp !== undefined) {
+    const num = formatDecimal(ov.mrp);
+    out = setCell(out, OV_COL.mrp, (r, s) =>
+      `<c r="${r}"${s !== null ? ` s="${s}"` : ''} t="n"><v>${num}</v></c>`);
+  }
+  if (ov.price !== undefined) {
+    const num = formatDecimal(ov.price);
+    out = setCell(out, OV_COL.price, (r, s) =>
+      `<c r="${r}"${s !== null ? ` s="${s}"` : ''} t="n"><v>${num}</v></c>`);
+  }
+  // Fail closed: an export can never contain selling price > MRP (T-1.21).
+  const e = numericInRow(out, 'E');
+  const f = numericInRow(out, 'F');
+  if (e !== null && f !== null && f > e) {
+    throw new Error(`Selling price (${f}) cannot be more than MRP (${e}).`);
+  }
+  return out;
+}
+
 /**
  * Build a SmartBiz-ready workbook containing only the chosen products.
  *
  * @param {Uint8Array} skeleton  from parseWorkbook
  * @param {Record<string,string>} rows  sku -> original row XML
  * @param {string[]} skus  chosen SKUs, in original sheet order
+ * @param {Record<string,{name?:string,size?:string,mrp?:string,price?:string}>} overridesBySku
+ *   optional per-SKU overrides — applied BEFORE renumbering; SKUs without an entry pass
+ *   through byte-identical. The 3-argument call keeps working unchanged.
  * @returns {Uint8Array}
  */
-export function buildWorkbook(skeleton, rows, skus) {
+export function buildWorkbook(skeleton, rows, skus, overridesBySku = {}) {
   if (!skus.length) throw new Error('Nothing selected — there is no file to build.');
 
   const parts = unzipSync(skeleton);
@@ -325,7 +544,9 @@ export function buildWorkbook(skeleton, rows, skus) {
   for (let i = 0; i < skus.length; i++) {
     const rowXml = rows[skus[i]];
     if (!rowXml) throw new Error(`No source row for SKU ${skus[i]} — the catalog may have changed.`);
-    out[i + 1] = renumberRow(rowXml, i + 2); // row 1 is the header
+    const ov = overridesBySku[skus[i]];
+    // Order: apply overrides, then renumber (SPEC §8).
+    out[i + 1] = renumberRow(ov ? applyOverrides(rowXml, ov) : rowXml, i + 2); // row 1 is the header
   }
 
   const rebuilt =
