@@ -83,6 +83,11 @@ function computeSwipeThreshold(): number {
   return Math.min(110, window.innerWidth * 0.28);
 }
 
+function priceHint(price: number, mrp: number): string {
+  if (price >= mrp) return 'Same as MRP';
+  return `MRP ${formatRupees(mrp)} · you save ${formatRupees(mrp - price)}`;
+}
+
 function formatSizeValue(v: number, unit: Unit): string {
   const decimals = packSizeDecimals(unit);
   let s = v.toFixed(decimals);
@@ -376,169 +381,40 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
     }
     refreshChangedBadge();
 
-    // ---- selling price: a direct stepper replaces the old keyboard-only field.
-    // A label row above it now says which number is which (users could not tell the
-    // top stepper from the bottom one) and carries the MRP as a tappable chip — the
-    // MRP itself used to be reachable only through the ⋯ sheet, a real dead end once
-    // price == MRP (the price stepper's own "+" is capped at MRP). Tapping the chip
-    // reveals an MRP stepper right here so both numbers can move without leaving the
-    // card. The per-stepper hint line these two used to render below them is gone
-    // (see `.card__body .stepper__hint` in styles.css) — its content now lives in the
-    // label rows instead, which is how the card keeps roughly the same height despite
-    // gaining a visible "Selling price" / "MRP" / "Pack size" label on every row.
-    let mrpValue = disp.mrp;
-
+    // ---- selling price: a direct stepper replaces the old keyboard-only field. Its
+    // hint carries the MRP context, so there is no separate price row to fit.
     const priceRow = document.createElement('div');
     priceRow.className = 'card__price-row';
-
-    const priceLabelRow = document.createElement('div');
-    priceLabelRow.className = 'card__price-label-row';
-    const priceLabelEl = document.createElement('span');
-    priceLabelEl.className = 'card__price-label';
-    const mrpChip = document.createElement('button');
-    mrpChip.type = 'button';
-    mrpChip.className = 'card__mrp-chip';
-    mrpChip.setAttribute('aria-expanded', 'false');
-    priceLabelRow.append(priceLabelEl, mrpChip);
-
-    function priceLabelText(price: number): string {
-      if (price >= mrpValue) return 'Selling price';
-      return `Selling price · Save ${formatRupees(mrpValue - price)}`;
-    }
-    function renderPriceLabel(price: number): void {
-      priceLabelEl.textContent = priceLabelText(price);
-    }
-    function renderMrpChip(): void {
-      mrpChip.textContent = `MRP ${formatRupees(mrpValue)}`;
-      mrpChip.setAttribute('aria-label', `MRP ${formatRupees(mrpValue)}. Tap to edit.`);
-    }
-    renderMrpChip();
-
-    function commitPrice(v: number): void {
-      if (v === p.p) store.setOverride(p.s, 'price', null);
-      else store.setOverride(p.s, 'price', String(v));
-      refreshChangedBadge();
-    }
-
+    const mrp = disp.mrp;
     const priceHandle: StepperHandle = createStepper({
-      value: clamp(disp.price, 0, mrpValue),
+      value: clamp(disp.price, 0, mrp),
       min: 0,
-      max: mrpValue,
+      max: mrp,
       step: 1,
       decimals: 0,
       format: formatRupees,
       label: 'Selling price',
       size: 'lg',
-      onInput: (v) => renderPriceLabel(v),
+      hint: priceHint(disp.price, mrp),
+      onInput: (v) => priceHandle.setHint(priceHint(v, mrp)),
       onCommit: (v) => {
-        commitPrice(v);
-        renderPriceLabel(v);
+        if (v === p.p) store.setOverride(p.s, 'price', null);
+        else store.setOverride(p.s, 'price', String(v));
+        priceHandle.setHint(priceHint(v, mrp));
+        refreshChangedBadge();
       },
     });
-    renderPriceLabel(clamp(disp.price, 0, mrpValue));
-    priceRow.append(priceLabelRow, priceHandle.el);
-
-    // ---- MRP: collapsed until the chip is tapped, so the compact card stays compact.
-    // The MRP stepper is built lazily, on first expand, so the (frequent) peek/top
-    // cards that never get their MRP opened never pay for one.
-    const mrpWrap = document.createElement('div');
-    mrpWrap.className = 'card__mrp-wrap';
-    mrpWrap.hidden = true;
-    const mrpLabelRow = document.createElement('div');
-    mrpLabelRow.className = 'card__mrp-label-row';
-    mrpLabelRow.textContent = 'MRP';
-    mrpWrap.appendChild(mrpLabelRow);
-    priceRow.appendChild(mrpWrap);
-
-    function commitMrp(v: number): void {
-      if (v === p.m) store.setOverride(p.s, 'mrp', null);
-      else store.setOverride(p.s, 'mrp', String(v));
-      refreshChangedBadge();
-    }
-
-    // Every MRP move can silently reclamp the price stepper (`setRange` fires neither
-    // onInput nor onCommit — see stepper.ts). If that reclamp actually changed the
-    // stored price, the override must be corrected right here: otherwise the on-screen
-    // price drops but the persisted override keeps the old, now-too-high number, and
-    // the export's price<=MRP guard fails closed on a file the shopkeeper cannot fix
-    // from the card.
-    function syncPriceToMrp(prevPrice: number): void {
-      priceHandle.setRange(0, mrpValue);
-      const newPrice = priceHandle.getValue();
-      if (newPrice !== prevPrice) commitPrice(newPrice);
-      renderPriceLabel(newPrice);
-    }
-
-    let mrpHandle: StepperHandle | null = null;
-
-    function expandMrp(): void {
-      mrpWrap.hidden = false;
-      mrpChip.setAttribute('aria-expanded', 'true');
-      if (!mrpHandle) {
-        mrpHandle = createStepper({
-          value: mrpValue,
-          min: 1,
-          max: 999999,
-          step: 1,
-          decimals: 0,
-          format: formatRupees,
-          label: 'MRP',
-          size: 'sm',
-          onInput: (v) => {
-            const prevPrice = priceHandle.getValue();
-            mrpValue = v;
-            renderMrpChip();
-            syncPriceToMrp(prevPrice);
-          },
-          onCommit: (v) => {
-            mrpValue = v;
-            commitMrp(v);
-            renderMrpChip();
-          },
-        });
-        mrpWrap.appendChild(mrpHandle.el);
-      }
-    }
-    function collapseMrp(): void {
-      mrpWrap.hidden = true;
-      mrpChip.setAttribute('aria-expanded', 'false');
-      // On a short screen the body scrolls while MRP is open. Collapsing shrinks the content
-      // again, so without this the card is left scrolled down with the category chip and name
-      // sitting above the fold — it reads as a broken card.
-      body.scrollTop = 0;
-    }
-    mrpChip.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (mrpWrap.hidden) expandMrp();
-      else collapseMrp();
-    });
-
+    priceRow.appendChild(priceHandle.el);
     body.appendChild(priceRow);
 
     // ---- pack size: a small stepper plus a tap-to-expand unit pill. Changing the
-    // unit is a label correction, never a conversion — the number is left alone. Its
-    // own label row (below) replaces the per-stepper hint this used to render beneath
-    // it — "Not set — tap to set" now lives there as a quiet marker instead, and since
-    // there is no hint text left to protect, the old NBSP-once-set trick is gone too
-    // (see `.card__body .stepper__hint` in styles.css).
-    const sizeLabelRow = document.createElement('div');
-    sizeLabelRow.className = 'card__size-label-row';
-    const sizeLabelEl = document.createElement('span');
-    sizeLabelEl.className = 'card__size-label';
-    sizeLabelEl.textContent = 'Pack size';
-    const sizeUnsetEl = document.createElement('span');
-    sizeUnsetEl.className = 'card__size-unset';
-    sizeUnsetEl.textContent = 'not set';
-    sizeLabelRow.append(sizeLabelEl, sizeUnsetEl);
-    body.appendChild(sizeLabelRow);
-
+    // unit is a label correction, never a conversion — the number is left alone.
     const sizeRow = document.createElement('div');
     sizeRow.className = 'card__size-row';
 
     const seed = seedPackSize(disp.size, disp.name);
     let unit: Unit = seed.ps.unit;
     let sizeSet = seed.isSet;
-    sizeUnsetEl.hidden = sizeSet;
     if (!sizeSet) sizeRow.classList.add('card__size-row--unset');
 
     const sizeSlot = document.createElement('div');
@@ -554,6 +430,11 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
         format: (v) => formatSizeValue(v, u),
         label: 'Pack size',
         size: 'sm',
+        // A non-breaking space once set, never true empty string: the card's hint line has
+        // no reserved min-height (see .card__size-stepper .stepper__hint in styles.css), so
+        // an actually-empty hint would collapse the line and shift the card the moment a
+        // size is confirmed. A non-empty (if invisible) line keeps the height constant.
+        hint: sizeSet ? ' ' : 'Not set — tap to set',
         onCommit: (v) => commitSize(v),
       });
     }
@@ -561,7 +442,7 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
     function commitSize(v: number): void {
       sizeSet = true;
       sizeRow.classList.remove('card__size-row--unset');
-      sizeUnsetEl.hidden = true;
+      sizeHandle.setHint(' '); // NBSP — keeps the hint line's height once a size is confirmed.
       const ps: PackSize = { value: v, unit };
       // "The catalog's own value" for size is what the untouched name would infer —
       // matching it clears the override so a no-op edit never shows as Changed.
@@ -630,8 +511,7 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
     sizeRow.append(sizeSlot, unitBox);
     body.appendChild(sizeRow);
 
-    // ---- overflow: name and the rarer fields stay behind the edit sheet (MRP now has
-    // its own inline stepper above, via the chip on the price label row).
+    // ---- overflow: name/MRP and the rarer fields stay behind the edit sheet.
     const more = document.createElement('button');
     more.type = 'button';
     more.className = 'card__more';
@@ -648,7 +528,6 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
 
     bodyTeardowns.set(body, () => {
       priceHandle.destroy();
-      mrpHandle?.destroy();
       sizeHandle.destroy();
     });
 

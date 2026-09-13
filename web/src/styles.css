@@ -512,8 +512,8 @@ button { font: inherit; color: inherit; }
 .card--dragging { cursor: grabbing; }
 
 .card__image-wrap {
-  flex: 1 1 auto;
-  min-height: 80px;
+  flex: 1;
+  min-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -541,22 +541,7 @@ button { font: inherit; color: inherit; }
 /* Tightened padding: the product image is the thing a shopkeeper recognises a product by,
    so the body gives it back every px it doesn't need (see the stepper-hint overrides below,
    which claw back the rest of the height without touching the shared stepper.css). */
-/* The body must never be clipped by the card. Expanding the MRP row adds ~70px, and on a
-   640px screen that is more than the image can give back once it hits its floor — the pack
-   size row then disappeared under the card's `overflow:hidden`, unreachable. Let the body
-   take the space it needs and scroll if the screen is genuinely too short, rather than
-   silently swallowing a control. `pan-y` keeps this vertical scroll from competing with the
-   card's horizontal swipe-to-decide. */
-.card__body {
-  padding: 4px 14px 6px;
-  border-top: 1px solid var(--line);
-  position: relative;
-  flex: 0 0 auto;
-  max-height: calc(100% - 80px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-}
+.card__body { padding: 4px 14px 6px; border-top: 1px solid var(--line); position: relative; }
 .card__chip {
   display: inline-block;
   font-size: 11px;
@@ -578,92 +563,7 @@ button { font: inherit; color: inherit; }
   overflow: hidden;
   padding-right: 40px; /* keep clear of the ⋯ More button */
 }
-/* Every stepper on the card used to carry its context (MRP, savings, "not set") in a
-   `.stepper__hint` line rendered BELOW it (shared stepper.css, min-height:16px + 6px
-   margin — the edit sheet uses the same component and must keep that). That's also
-   where the confusion came from ("is the top one MRP or the bottom one?") — nothing
-   above either stepper said what it was. The fix moves that information into a label
-   row ABOVE each stepper instead (see .card__price-label-row / .card__mrp-label-row /
-   .card__size-label-row below) and hides the now-empty hint line entirely, card-scoped
-   only, so the edit sheet's own hints (Original: ₹X) are untouched. Because the label
-   row replaces rather than adds to the hint line, the card's total height barely moves.
-   The old NBSP-once-set trick that used to protect the pack-size hint's height is gone
-   for the same reason — there is no hint left to protect. */
-.card__body .stepper__hint { display: none; }
-
-/* While the MRP row is open the body needs ~70px more than the image can spare at its normal
-   floor, so lend it some: the shopkeeper who opened MRP is reading numbers, not the picture.
-   Progressive enhancement — where `:has()` is unsupported the body simply scrolls instead
-   (see .card__body), so the pack size row stays reachable either way. */
-.card:has(.card__mrp-wrap:not([hidden])) .card__image-wrap { min-height: 64px; }
-.card:has(.card__mrp-wrap:not([hidden])) .card__body { max-height: calc(100% - 64px); }
-
 .card__price-row { margin-top: 1px; }
-.card__price-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin: 0 0 3px;
-}
-.card__price-label {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--ink-3);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* Real button, not a decorative chip: this is the only way to raise an MRP that is
-   already equal to the selling price without leaving the card (the price stepper's
-   own "+" is capped at MRP). Sized to the same 44px tap target as every other control
-   on the card. */
-.card__mrp-chip {
-  flex: 0 0 auto;
-  appearance: none;
-  height: 44px;
-  padding: 0 12px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 12px;
-  border: 1.5px solid var(--line);
-  background: var(--surface);
-  color: var(--ink-2);
-  font-weight: 700;
-  font-size: var(--fs-sm);
-  cursor: pointer;
-}
-.card__mrp-chip[aria-expanded="true"] {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.card__mrp-wrap { margin-top: 6px; }
-.card__mrp-label-row {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--ink-3);
-  margin: 0 0 3px;
-}
-
-.card__size-label-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin: 6px 0 3px;
-}
-.card__size-label {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--ink-3);
-}
-/* Quiet marker standing in for the old "Not set — tap to set" hint line. */
-.card__size-unset {
-  font-size: var(--fs-xs);
-  color: var(--ink-3);
-  font-style: italic;
-}
 .card__size-row {
   margin-top: 1px;
   display: flex;
@@ -671,29 +571,31 @@ button { font: inherit; color: inherit; }
   gap: var(--sp-2);
   flex-wrap: wrap;
 }
+/* The two steppers each reserve a `.stepper__hint` line via stepper.css (min-height:16px +
+   6px margin, shared with the edit sheet — do not change it there). Scoped to the card only,
+   drop that reserve and tighten the line: the price hint always has text (no jump), and the
+   pack-size hint is kept non-empty (a NBSP once set, see deck.ts) precisely so the same
+   min-height:0 here never causes *its* line to collapse and shift the layout. */
+.card__price-row .stepper__hint,
+.card__size-stepper .stepper__hint {
+  min-height: 0;
+  margin: 1px 0 0;
+  line-height: 1.1;
+}
 /* No size known yet (no override, nothing parseable from the name) — muted until touched. */
 .card__size-row--unset { opacity: .6; }
 .card__size-stepper { flex: 1 1 auto; min-width: 0; }
 .card__units { position: relative; flex: 0 0 auto; }
-/* Flush with the sm stepper's − / + buttons beside it: with the hint line above now
-   hidden, `.card__size-stepper` is exactly the sm stepper's 44px row (no more hint
-   pushing its wrapper to ~60px, which used to centre this pill visibly low). Sized
-   and radiused to match `.stepper-wrap[data-size="sm"] .stepper__btn` in stepper.css
-   exactly (44px, 12px radius, 1.5px border) rather than the old pill/oval, so the three
-   controls read as one set instead of a big oval dropped in next to two squares. */
 .card__unit-pill {
-  height: 44px;
+  min-height: 44px;
   min-width: 44px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1.5px solid var(--line);
+  padding: 6px 14px;
+  border-radius: var(--pill);
+  border: 1px solid var(--line);
   background: var(--surface);
   font-weight: 700;
   font-size: var(--fs-sm);
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 .card__unit-options {
   position: absolute;
