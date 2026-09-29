@@ -255,7 +255,9 @@ export function openEditSheet(p: Product, onSaved: () => void): void {
   function onMrpChanged(v: number): void {
     mrpValue = v;
     priceStepper.setRange(0, v);
-    priceValue = priceStepper.getValue(); // setRange re-clamps silently — resync our copy
+    // Selling price matches a changed MRP; a discount is set on the price afterwards.
+    priceStepper.setValue(v, true);
+    priceValue = priceStepper.getValue();
     updatePriceHint();
     fieldPrice.refresh();
     fieldMrp.refresh();

@@ -384,16 +384,14 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
     // ---- MRP: the number most shopkeepers sell at, so it is the one on the card. It
     // saves on every change (onInput), not after the stepper's idle commit — a swipe or
     // "Stock it" straight after an edit used to destroy the card with the save still
-    // pending. Selling price lives behind ⋯; here it follows MRP when it was sold at MRP,
-    // keeps a discount otherwise, and is never left above MRP (the export refuses that).
-    // Worked out from the values this card opened with, so stepping MRP down past a
-    // discount and back up again doesn't wipe the discount.
+    // pending. Changing MRP sets the selling price to match it — a discount is set
+    // afterwards behind ⋯ — so the two never drift apart unnoticed.
     const priceRow = document.createElement('div');
     priceRow.className = 'card__price-row';
     const startMrp = disp.mrp;
     const startPrice = disp.price;
     function saveMrp(mrp: number): void {
-      const price = startPrice >= startMrp ? mrp : Math.min(startPrice, mrp);
+      const price = mrp;
       store.setOverride(p.s, 'mrp', mrp === p.m ? null : String(mrp));
       store.setOverride(p.s, 'price', price === p.p ? null : String(price));
       mrpHandle.setHint(sellingHint(price, mrp));
