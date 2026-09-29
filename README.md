@@ -50,6 +50,7 @@ Starter accounts. **Change these before giving the link to anyone**, using `npm 
 | `store2` | `store2pass` | " |
 | `store3` | `store3pass` | " |
 | `store4` | `store4pass` | " |
+| `store5` … `store29` | `store5pass` … `store29pass` (same pattern) | " |
 
 Each person only ever sees their own choices. There is no way for one store owner to see or
 overwrite another's.
@@ -62,15 +63,18 @@ overwrite another's.
 2. You'll see how many items you stock, and a button to start or continue where you stopped. Tap it.
 3. For each product: **✓ Stock it if you sell it, ✗ Don't stock if you don't.** You can swipe the card, or switch to List to tick many at once.
 4. To find a product fast, use the search box on the first screen.
-5. If our price or pack size is wrong for your shop, fix it right on the card: use the **− / +**
-   buttons under the price and under the pack size — tap to nudge by one, hold one down to move
-   faster, or drag the number left and right to slide it. Price can never go above MRP. For
-   anything else, like the product name, tap **⋯** on the card. A changed product shows a
-   "Changed" tag everywhere.
-6. Got one wrong? Open **Review my list** (menu ⋯, or after finishing a category) and flip anything — any decision can be changed at any time.
-7. Stop whenever you like. Close the browser, come back tomorrow — you carry on exactly where
+5. If our MRP or pack size is wrong for your shop, fix it right on the card: use the **− / +**
+   buttons on the MRP and on the pack size — tap to nudge by one, hold one down to move
+   faster, drag the number left and right to slide it, or tap the number and type it. It saves
+   the moment you change it. Your selling price follows the MRP; to sell below MRP (a
+   discount), or to change anything else like the product name, tap **⋯** on the card. A changed
+   product shows a "Changed" tag everywhere.
+6. To start over, open List in a category and tap **Clear all** (that category only), or use
+   **Clear all my choices** in the menu ⋯ on the first screen (everything). Your price fixes stay.
+7. Got one wrong? Open **Review my list** (menu ⋯, or after finishing a category) and flip anything — any decision can be changed at any time.
+8. Stop whenever you like. Close the browser, come back tomorrow — you carry on exactly where
    you stopped, even on a different phone.
-8. When you're done, tap **Make my file**. When it is ready, **Share** it (for example to
+9. When you're done, tap **Make my file**. When it is ready, **Share** it (for example to
    WhatsApp) or save it to your phone. Send that file as it is — **do not open it or change
    anything first.**
 

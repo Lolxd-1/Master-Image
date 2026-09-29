@@ -83,9 +83,9 @@ function computeSwipeThreshold(): number {
   return Math.min(110, window.innerWidth * 0.28);
 }
 
-function priceHint(price: number, mrp: number): string {
-  if (price >= mrp) return 'Same as MRP';
-  return `MRP ${formatRupees(mrp)} · you save ${formatRupees(mrp - price)}`;
+function sellingHint(price: number, mrp: number): string {
+  if (price >= mrp) return 'Selling price same as MRP';
+  return `Selling price ${formatRupees(price)} · save ${formatRupees(mrp - price)}`;
 }
 
 function formatSizeValue(v: number, unit: Unit): string {
@@ -381,30 +381,37 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
     }
     refreshChangedBadge();
 
-    // ---- selling price: a direct stepper replaces the old keyboard-only field. Its
-    // hint carries the MRP context, so there is no separate price row to fit.
+    // ---- MRP: the number most shopkeepers sell at, so it is the one on the card. It
+    // saves on every change (onInput), not after the stepper's idle commit — a swipe or
+    // "Stock it" straight after an edit used to destroy the card with the save still
+    // pending. Selling price lives behind ⋯; here it follows MRP when it was sold at MRP,
+    // keeps a discount otherwise, and is never left above MRP (the export refuses that).
+    // Worked out from the values this card opened with, so stepping MRP down past a
+    // discount and back up again doesn't wipe the discount.
     const priceRow = document.createElement('div');
     priceRow.className = 'card__price-row';
-    const mrp = disp.mrp;
-    const priceHandle: StepperHandle = createStepper({
-      value: clamp(disp.price, 0, mrp),
-      min: 0,
-      max: mrp,
+    const startMrp = disp.mrp;
+    const startPrice = disp.price;
+    function saveMrp(mrp: number): void {
+      const price = startPrice >= startMrp ? mrp : Math.min(startPrice, mrp);
+      store.setOverride(p.s, 'mrp', mrp === p.m ? null : String(mrp));
+      store.setOverride(p.s, 'price', price === p.p ? null : String(price));
+      mrpHandle.setHint(sellingHint(price, mrp));
+      refreshChangedBadge();
+    }
+    const mrpHandle: StepperHandle = createStepper({
+      value: startMrp,
+      min: 1,
+      max: 999999,
       step: 1,
       decimals: 0,
       format: formatRupees,
-      label: 'Selling price',
+      label: 'MRP',
       size: 'lg',
-      hint: priceHint(disp.price, mrp),
-      onInput: (v) => priceHandle.setHint(priceHint(v, mrp)),
-      onCommit: (v) => {
-        if (v === p.p) store.setOverride(p.s, 'price', null);
-        else store.setOverride(p.s, 'price', String(v));
-        priceHandle.setHint(priceHint(v, mrp));
-        refreshChangedBadge();
-      },
+      hint: sellingHint(startPrice, startMrp),
+      onInput: saveMrp,
     });
-    priceRow.appendChild(priceHandle.el);
+    priceRow.appendChild(mrpHandle.el);
     body.appendChild(priceRow);
 
     // ---- pack size: a small stepper plus a tap-to-expand unit pill. Changing the
@@ -435,7 +442,8 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
         // an actually-empty hint would collapse the line and shift the card the moment a
         // size is confirmed. A non-empty (if invisible) line keeps the height constant.
         hint: sizeSet ? ' ' : 'Not set — tap to set',
-        onCommit: (v) => commitSize(v),
+        // Saved on every change, like MRP above — never left pending behind a swipe.
+        onInput: (v) => commitSize(v),
       });
     }
 
@@ -527,7 +535,7 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
     body.appendChild(more);
 
     bodyTeardowns.set(body, () => {
-      priceHandle.destroy();
+      mrpHandle.destroy();
       sizeHandle.destroy();
     });
 
@@ -967,19 +975,25 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
         });
       })();
     });
+    // Clear = back to unchecked, so the category can be started fresh. It used to mark
+    // everything "not stocked", which left every product still decided.
+    clearAll.disabled = prog.done === 0;
     clearAll.addEventListener('click', () => {
       void (async () => {
+        const decided = queue.filter((p) => store.getDecision(p.s) !== undefined);
+        if (decided.length === 0) return;
         const ok = await confirmDialog({
-          title: `Mark all ${queue.length} products as not stocked?`,
-          body: 'You can undo this right after, or change any item later.',
-          confirmLabel: 'Mark all not stocked',
+          title: `Clear ${decided.length} choice${decided.length === 1 ? '' : 's'} in ${categoryName}?`,
+          body: 'These products go back to unchecked. You can undo this right after.',
+          confirmLabel: `Clear ${decided.length}`,
         });
         if (!ok) return;
-        const snapshot = new Map(queue.map((p) => [p.s, store.getDecision(p.s)] as const));
-        store.setDecisions(queue.map((p) => ({ sku: p.s, value: 0 as const })));
+        const snapshot = new Map(decided.map((p) => [p.s, store.getDecision(p.s)] as const));
+        store.clearDecisions(decided.map((p) => p.s));
+        history.length = 0;
         renderList();
         updateUndoButton();
-        toast(`Cleared ${queue.length} products.`, {
+        toast(`Cleared ${decided.length} product${decided.length === 1 ? '' : 's'}.`, {
           label: 'Undo',
           onClick: () => {
             store.restoreDecisions(snapshot);
@@ -996,6 +1010,13 @@ export function mount(root: HTMLElement, categoryName: string): Cleanup {
 
   function onKeydown(e: KeyboardEvent): void {
     if (currentMode !== 'swipe' || animating || pointer >= queue.length) return;
+    // Arrow keys belong to whatever is being typed in or stepped (the MRP box, the edit
+    // sheet, a confirm) — they used to fly the card away mid-edit.
+    const t = e.target as Element | null;
+    if (e.defaultPrevented) return;
+    if (t?.closest?.('input, textarea, select, [contenteditable="true"], .stepper-wrap, [role="dialog"], [role="alertdialog"]')) {
+      return;
+    }
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       commit(0);

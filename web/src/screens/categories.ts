@@ -13,7 +13,7 @@ import { store, type Category, type SyncStatus } from '../store';
 import type { Product } from '../api';
 import type { Cleanup } from '../main';
 import { productRow } from '../product-row';
-import { confirmDialog, renderIncrementalList, renderStatusChip, type IncrementalListHandle } from '../ui';
+import { confirmDialog, renderIncrementalList, renderStatusChip, toast, type IncrementalListHandle } from '../ui';
 
 const RING_RADIUS = 18;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -242,7 +242,40 @@ export function mount(root: HTMLElement): Cleanup {
         window.location.hash = '#/login';
       })();
     });
-    menuEl.append(reviewBtn, logoutBtn);
+    // Start fresh: every choice back to unchecked (price fixes are kept). One category
+    // at a time is "Clear all" in that category's List view.
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.textContent = 'Clear all my choices';
+    clearBtn.setAttribute('role', 'menuitem');
+    clearBtn.addEventListener('click', () => {
+      closeMenu();
+      void (async () => {
+        const decided = store.products.filter((p) => store.getDecision(p.s) !== undefined);
+        if (decided.length === 0) {
+          toast('Nothing to clear yet.');
+          return;
+        }
+        const ok = await confirmDialog({
+          title: `Clear all ${decided.length} choice${decided.length === 1 ? '' : 's'}?`,
+          body: 'Every product goes back to unchecked, so you can start fresh. You can undo this right after.',
+          confirmLabel: `Clear ${decided.length}`,
+        });
+        if (!ok) return;
+        const snapshot = new Map(decided.map((p) => [p.s, store.getDecision(p.s)] as const));
+        store.clearDecisions(decided.map((p) => p.s));
+        store.clearContinue();
+        renderAll();
+        toast(`Cleared ${decided.length} product${decided.length === 1 ? '' : 's'}.`, {
+          label: 'Undo',
+          onClick: () => {
+            store.restoreDecisions(snapshot);
+            renderAll();
+          },
+        });
+      })();
+    });
+    menuEl.append(reviewBtn, clearBtn, logoutBtn);
     menuWrap.appendChild(menuEl);
     document.addEventListener('click', onDocClick, true);
   });

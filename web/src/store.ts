@@ -348,6 +348,18 @@ class Store {
     this.scheduleFlush(FLUSH_DEBOUNCE_MS);
   }
 
+  /** Bulk durable undecide ("Clear all"): tombstones exactly like `clearDecision`. */
+  clearDecisions(skus: readonly string[]): void {
+    for (const sku of skus) {
+      this.decisions.delete(sku);
+      this.outbox.set(sku, null);
+    }
+    this.persistDecisions();
+    this.persistOutbox();
+    this.setStatus('saving');
+    this.scheduleFlush(FLUSH_DEBOUNCE_MS);
+  }
+
   /** Restore a snapshot (bulk undo). `undefined` = was undecided. */
   restoreDecisions(snapshot: ReadonlyMap<string, DecisionValue | undefined>): void {
     for (const [sku, prev] of snapshot) {

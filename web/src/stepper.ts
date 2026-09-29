@@ -387,6 +387,9 @@ export function createStepper(opts: StepperOptions): StepperHandle {
   // ---------------------------------------------------------------- keyboard
 
   on<KeyboardEvent>(track, 'keydown', (e) => {
+    // Keys typed into the edit box bubble here (Enter included, after it has already
+    // closed the box) — they are the box's own, never a second action on the stepper.
+    if (inputEl || e.target !== track) return;
     const s = currentStep(value);
     switch (e.key) {
       case 'ArrowRight':
@@ -415,7 +418,18 @@ export function createStepper(opts: StepperOptions): StepperHandle {
         e.preventDefault();
         applyValue(max, false);
         break;
+      case 'Enter':
+        if (allowType) {
+          e.preventDefault();
+          startTyping();
+        }
+        break;
       default:
+        // Focused (clicked) and a digit typed: start typing the new value right away.
+        if (allowType && /^[0-9.]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          startTyping(e.key);
+        }
         break;
     }
   });
@@ -446,18 +460,20 @@ export function createStepper(opts: StepperOptions): StepperHandle {
     endTyping();
   }
 
-  function startTyping(): void {
+  /** `initial` = the first key typed on a focused stepper; it replaces the old value. */
+  function startTyping(initial?: string): void {
     if (inputEl) return;
     const input = document.createElement('input');
     input.type = 'text';
     input.inputMode = 'decimal';
     input.className = 'stepper__input';
     input.setAttribute('aria-label', opts.label);
-    input.value = String(value);
+    input.value = initial ?? String(value);
     valueSpan.replaceWith(input);
     inputEl = input;
     input.focus();
-    input.select();
+    if (initial === undefined) input.select();
+    else input.setSelectionRange(input.value.length, input.value.length);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
